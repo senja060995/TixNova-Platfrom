@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎵 TixNova — Concert Ticketing SaaS Platform
 
 > Platform ticketing konser berbasis SaaS multi-tenant  
@@ -41,3 +42,6 @@ Seluruh dokumentasi perencanaan produk tersedia di:
 ---
 
 *Dibuat oleh Antigravity AI — 29 Juli 2026*
+=======
+# TixNova
+>>>>>>> e6058579e2555fac08d870bcb6015e70304dad02
