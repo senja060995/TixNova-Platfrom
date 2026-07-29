@@ -2,7 +2,25 @@
 # 🎵 TixNova — Concert Ticketing SaaS Platform
 
 > Platform ticketing konser berbasis SaaS multi-tenant  
-> **PT Ragam Manfaat Sinergi** — Versi 1.0.0
+> **PT Ragam Manfaat Sinergi** — Versi 1.0.0  
+> Alamat: Jl. Teluk Betung Selatan No. 123, Bandar Lampung, Indonesia  
+
+## 🎯 Tentang TixNova
+
+TixNova adalah platform ticketing konserten yang dibangun dengan arsitektur multi-tenant menggunakan Laravel 12 untuk backend dan Next.js 14 untuk frontend. Platform ini dirancang untuk membantu promotor acara dalam mengelola penjualan tiket secara efisien, memberikan pengalaman yang mulus bagi pengguna untuk membeli tiket, dan memberi kontrol penuh kepada super admin untuk mengelola seluruh sistem.
+
+### Fitur Utama:
+- **Multi-tenant System**: Setiap promotor memiliki data terisolasi dengan keamanan yang maksimal
+- **RBAC (Role-Based Access Control)**: Tiga level akses - Super Admin, Promotor, dan User
+- **Sistem Event Management**: Pembuatan, pengelolaan, dan pelacakan acara secara lengkap
+- **Checkout yang Aman**: Integrasi dengan payment gateway lokal (Midtrans, Xendit)
+- **QR Code Ticketing**: Tiket digital dengan kode QR untuk verifikasi cepat
+- **Sistem Referral**: Program referensi untuk mendorong pemasaran organik
+- **Dashboard Analitik**: Visualisasi data penjualan dan performa acara
+- **Notifikasi Real-time**: Email dan SMS untuk konfirmasi pembelian dan reminder acara
+- **Manajemen Pengembalian**: Sistem refund yang terstruktur dan transparan
+- **Laporan Keuangan**: Laporan pendapatan, komisi, dan transaksi Detail
+
 
 ## 📋 Dokumentasi
 
@@ -39,9 +57,6 @@ Seluruh dokumentasi perencanaan produk tersedia di:
 - **Promotor** — Event organizer
 - **User** — Pembeli tiket
 
----
-
-*Dibuat oleh Antigravity AI — 29 Juli 2026*
 =======
 # TixNova
 >>>>>>> e6058579e2555fac08d870bcb6015e70304dad02
