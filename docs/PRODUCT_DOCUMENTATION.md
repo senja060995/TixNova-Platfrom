@@ -1309,5 +1309,5 @@ tests/
 
 ---
 
-*Dokumen ini dibuat oleh Antigravity AI untuk PT Ragam Manfaat Sinergi*  
+*Dokumen ini dibuat Oleh PT Ragam Manfaat Sinergi*  
 *Versi 1.0 — 29 Juli 2026*

@@ -18,6 +18,10 @@ use App\Http\Controllers\Promotor\DashboardController as PromotorDashboardContro
 use App\Http\Controllers\Promotor\ScanController as PromotorScanController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\SuperAdmin\BlogController as SuperAdminBlogController;
+use App\Http\Controllers\User\PaymentController;
+use App\Http\Controllers\Public\WebhookController;
+use App\Http\Controllers\Promotor\VoucherController as PromotorVoucherController;
+use App\Http\Controllers\Promotor\ReportController as PromotorReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +82,18 @@ Route::prefix('orders')->group(function () {
     Route::post('/{code}/cancel',        [OrderController::class, 'cancel']);
 });
 
+// ─── Payments ────────────────────────────────────────────────────────────────
+Route::prefix('payments')->group(function () {
+    Route::post('/initiate',           [PaymentController::class, 'initiate']);
+    Route::get('/{order_code}/status', [PaymentController::class, 'status']);
+});
+
+// ─── Webhooks ────────────────────────────────────────────────────────────────
+Route::prefix('webhooks')->group(function () {
+    Route::post('/midtrans', [WebhookController::class, 'midtrans']);
+    Route::post('/xendit',   [WebhookController::class, 'xendit']);
+});
+
 // ─── Super Admin ─────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'check.role:super_admin', 'check.tenant'])
     ->prefix('super-admin')
@@ -120,6 +136,11 @@ Route::middleware(['auth:sanctum', 'check.role:promotor', 'check.tenant'])
         Route::post('/blogs/{blog}/publish',   [PromotorBlogController::class, 'publish']);
         Route::post('/blogs/{blog}/unpublish', [PromotorBlogController::class, 'unpublish']);
         Route::post('/blogs/{blog}/banner',    [PromotorBlogController::class, 'uploadBanner']);
+
+        Route::apiResource('/vouchers', PromotorVoucherController::class)->only(['index', 'store', 'destroy']);
+
+        Route::get('/events/{event}/reports', [PromotorReportController::class, 'eventReport']);
+        Route::get('/reports/export',         [PromotorReportController::class, 'export']);
 
         Route::post('/scan', [PromotorScanController::class, 'scan']);
     });
