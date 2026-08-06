@@ -37,6 +37,7 @@ class User extends Authenticatable
             'birth_date' => 'date',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'phone' => 'encrypted',
         ];
     }
 

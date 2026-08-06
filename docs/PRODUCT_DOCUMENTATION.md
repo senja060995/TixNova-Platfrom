@@ -1307,7 +1307,8 @@ tests/
 - [ ] Fix bug High: Xendit webhook 500 (`routes/api.php:106`), `TicketController::update` crash, `/auth/refresh` mismatch
 - [ ] Fix free-order (order tanpa pembayaran valid), admin fee hardcoded Rp5.000 → configurable per tenant
 - [ ] CI/CD (GitHub Actions: test + lint), Docker, Redis (cache + queue)
-- [ ] Rate limit auth, CORS produksi, bersihkan kredensial seed
+- [x] Security Hardening v1: Enkripsi Data Pelanggan (PII), HMAC Signed QR Code Anti-Pemalsuan, Security Headers (CSP, HSTS, X-Frame-Options: DENY), Audit Log System & Log Redaction
+- [x] Rate limit auth, CORS produksi, bersihkan kredensial seed
 - [ ] Rebrand: positioning "AI-Powered Event Growth & Operating System" + tagline baru
 - [ ] Event Intelligence dashboard v1 (realtime sales/scan)
 - [ ] Affiliate link tracking v1 (perluasan `referrals`)

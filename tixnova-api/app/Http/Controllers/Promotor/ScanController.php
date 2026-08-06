@@ -20,9 +20,19 @@ class ScanController extends Controller
 
         $this->authorizeEvent($request, $event);
 
-        return DB::transaction(function () use ($data, $event, $request) {
+        $verified = app(\App\Services\QrSignatureService::class)->verify($data['qr_code']);
+        if (! $verified['valid']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tanda tangan QR Code tidak valid (Terdeteksi Pemalsuan Tiket).',
+            ], 422);
+        }
+
+        $cleanQrCode = $verified['qr_code'];
+
+        return DB::transaction(function () use ($cleanQrCode, $event, $request) {
             $item = OrderItem::query()
-                ->where('qr_code', $data['qr_code'])
+                ->where('qr_code', $cleanQrCode)
                 ->whereHas('order', fn ($query) => $query
                     ->withoutGlobalScopes()
                     ->where('event_id', $event->id))
@@ -31,7 +41,7 @@ class ScanController extends Controller
                 ->first();
 
             if (! $item) {
-                return $this->invalidResponse($data['qr_code'], $event, $request);
+                return $this->invalidResponse($cleanQrCode, $event, $request);
             }
 
             if ($item->order->status !== 'paid') {
