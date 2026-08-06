@@ -16,6 +16,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Admin Fee (Buyer Processing Fee)
+    |--------------------------------------------------------------------------
+    |
+    | Fixed admin fee charged to buyer per order (in IDR).
+    | Dapat di-override per tenant via kolom settings.admin_fee.
+    | Dibebankan hanya jika subtotal > 0 (tiket gratis tanpa admin fee).
+    |
+    */
+
+    'admin_fee' => env('ADMIN_FEE', 5000),
+
+    /*
+    |--------------------------------------------------------------------------
     | Commission Tiers
     |--------------------------------------------------------------------------
     |
@@ -24,10 +37,10 @@ return [
     */
 
     'tiers' => [
-        'free'          => 7.00,
-        'starter'       => 5.00,
-        'professional'  => 3.00,
-        'enterprise'    => 2.00,
+        'free' => 7.00,
+        'starter' => 5.00,
+        'professional' => 3.00,
+        'enterprise' => 2.00,
     ],
 
     /*

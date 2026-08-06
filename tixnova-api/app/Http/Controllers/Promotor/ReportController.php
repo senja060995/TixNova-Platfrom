@@ -4,82 +4,89 @@ namespace App\Http\Controllers\Promotor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Models\Order;
-use App\Models\Ticket;
+use App\Services\ReportService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    /**
-     * GET /api/promotor/events/{id}/reports — Laporan penjualan event spesifik
-     */
-    public function eventReport(int $eventId): JsonResponse
+    public function __construct(private ReportService $reports) {}
+
+    public function index(Request $request): JsonResponse
     {
-        $event = Event::findOrFail($eventId);
+        return response()->json([
+            'success' => true,
+            'data' => $this->reports->promotorReport($request->user()->tenant_id, $request->all()),
+        ]);
+    }
 
-        $orders = Order::where('event_id', $eventId)->get();
-        $tickets = Ticket::where('event_id', $eventId)->get();
+    public function eventReport(Request $request, Event $event): JsonResponse
+    {
+        $this->authorizeEvent($request, $event);
 
-        $totalRevenue = $orders->where('status', 'paid')->sum('total');
-        $totalOrders  = $orders->count();
-        $paidOrders   = $orders->where('status', 'paid')->count();
-        $ticketsSold  = $tickets->sum('sold');
-        $totalQuota   = $tickets->sum('quota');
+        $report = $this->reports->promotorReport($request->user()->tenant_id, [
+            ...$request->all(),
+            'event_id' => $event->id,
+        ]);
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'event'         => [
-                    'id'    => $event->id,
+            'data' => [
+                ...$report,
+                'event' => [
+                    'id' => $event->id,
                     'title' => $event->title,
-                    'status'=> $event->status,
+                    'status' => $event->status,
                 ],
-                'summary'       => [
-                    'total_revenue' => (float) $totalRevenue,
-                    'total_orders'  => $totalOrders,
-                    'paid_orders'   => $paidOrders,
-                    'tickets_sold'  => $ticketsSold,
-                    'total_quota'   => $totalQuota,
-                ],
-                'ticket_breakdown' => $tickets->map(fn($t) => [
-                    'id'    => $t->id,
-                    'name'  => $t->name,
-                    'price' => (float) $t->price,
-                    'quota' => $t->quota,
-                    'sold'  => $t->sold,
-                    'revenue' => (float) ($t->price * $t->sold),
-                ]),
             ],
         ]);
     }
 
-    /**
-     * GET /api/promotor/reports/export — Export laporan penjualan promotor
-     */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request): StreamedResponse|Response
     {
-        $tenantId = auth()->user()->tenant_id;
+        $format = $request->validate(['format' => ['required', 'in:csv,pdf']])['format'];
+        $tenantId = $request->user()->tenant_id;
+        $report = $this->reports->promotorReport($tenantId, $request->all());
+        $filename = 'laporan-promotor-'.$report['filters']['start_date'].'-'.$report['filters']['end_date'];
 
-        $orders = Order::where('tenant_id', $tenantId)
-            ->with(['event:id,title', 'items'])
-            ->latest()
-            ->get();
+        if ($format === 'pdf') {
+            return Pdf::loadView('reports.promotor', $report)
+                ->setPaper('a4', 'portrait')
+                ->download("{$filename}.pdf");
+        }
 
-        $data = $orders->map(fn($o) => [
-            'Order Code'   => $o->order_code,
-            'Buyer Name'   => $o->buyer_name,
-            'Buyer Email'  => $o->buyer_email,
-            'Event'        => $o->event?->title ?? '-',
-            'Total'        => $o->total,
-            'Status'       => $o->status,
-            'Date'         => $o->created_at->format('Y-m-d H:i:s'),
-        ]);
+        $rows = $this->reports->exportRows($tenantId, $request->all());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan penjualan berhasil dibuat.',
-            'data'    => $data,
-        ]);
+        return response()->streamDownload(function () use ($rows) {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, array_keys($rows->first() ?? [
+                'Kode Order' => '',
+                'Event' => '',
+                'Promotor' => '',
+                'Tanggal Pembayaran' => '',
+                'Subtotal Tiket' => '',
+                'Diskon' => '',
+                'Biaya Admin' => '',
+                'GMV' => '',
+                'Komisi Platform' => '',
+                'Payout Promotor' => '',
+            ]));
+
+            foreach ($rows as $row) {
+                fputcsv($output, $row);
+            }
+
+            fclose($output);
+        }, "{$filename}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function authorizeEvent(Request $request, Event $event): void
+    {
+        if ($event->tenant_id !== $request->user()->tenant_id) {
+            abort(404);
+        }
     }
 }

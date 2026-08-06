@@ -18,7 +18,7 @@ class TicketController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $event->tickets()->orderBy('sort_order')->get(),
+            'data' => $event->tickets()->orderBy('sort_order')->get(),
         ]);
     }
 
@@ -32,7 +32,7 @@ class TicketController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Tiket berhasil ditambahkan.',
-            'data'    => $ticket,
+            'data' => $ticket,
         ], 201);
     }
 
@@ -43,27 +43,30 @@ class TicketController extends Controller
     {
         $this->checkOwnership($event, $ticket);
 
-        $request->validate([
-            'name'         => ['sometimes', 'string', 'max:255'],
-            'type'         => ['sometimes', 'in:regular,vip,early_bird,free'],
-            'description'  => ['nullable', 'string'],
-            'price'        => ['sometimes', 'numeric', 'min:0'],
-            'quota'        => ['sometimes', 'integer', 'min:1'],
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'type' => ['sometimes', 'in:regular,vip,early_bird,free'],
+            'description' => ['nullable', 'string'],
+            'price' => ['sometimes', 'numeric', 'min:0'],
+            'early_bird_price' => ['nullable', 'numeric', 'min:0'],
+            'early_bird_quota' => ['nullable', 'integer', 'min:1'],
+            'early_bird_end' => ['nullable', 'date', 'after:sale_start'],
+            'quota' => ['sometimes', 'integer', 'min:1'],
             'min_purchase' => ['sometimes', 'integer', 'min:1'],
             'max_purchase' => ['sometimes', 'integer', 'min:1', 'max:20'],
-            'sale_start'   => ['nullable', 'date'],
-            'sale_end'     => ['nullable', 'date', 'after:sale_start'],
-            'includes'     => ['nullable', 'array'],
-            'is_active'    => ['boolean'],
-            'sort_order'   => ['integer'],
+            'sale_start' => ['nullable', 'date'],
+            'sale_end' => ['nullable', 'date', 'after:sale_start'],
+            'includes' => ['nullable', 'array'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['integer'],
         ]);
 
-        $ticket->update($request->validated());
+        $ticket->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Tiket berhasil diperbarui.',
-            'data'    => $ticket,
+            'data' => $ticket,
         ]);
     }
 

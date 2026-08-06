@@ -25,12 +25,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 ['slug' => Str::slug($cat['name'])],
                 [
-                    'name'       => $cat['name'],
-                    'slug'       => Str::slug($cat['name']),
-                    'type'       => 'event',
-                    'icon'       => $cat['icon'],
-                    'color'      => $cat['color'],
-                    'is_active'  => true,
+                    'name' => $cat['name'],
+                    'slug' => Str::slug($cat['name']),
+                    'type' => 'event',
+                    'icon' => $cat['icon'],
+                    'color' => $cat['color'],
+                    'is_active' => true,
                     'sort_order' => $i + 1,
                 ]
             );
@@ -40,12 +40,12 @@ class CategorySeeder extends Seeder
         $blogCats = ['Tips & Trik', 'Review Konser', 'Panduan Beli Tiket', 'Berita Event'];
         foreach ($blogCats as $i => $name) {
             Category::firstOrCreate(
-                ['slug' => Str::slug($name) . '-blog'],
+                ['slug' => Str::slug($name).'-blog'],
                 [
-                    'name'       => $name,
-                    'slug'       => Str::slug($name) . '-blog',
-                    'type'       => 'blog',
-                    'is_active'  => true,
+                    'name' => $name,
+                    'slug' => Str::slug($name).'-blog',
+                    'type' => 'blog',
+                    'is_active' => true,
                     'sort_order' => $i + 1,
                 ]
             );

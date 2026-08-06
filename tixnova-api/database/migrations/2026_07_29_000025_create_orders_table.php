@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('commission_fee', 12, 2)->default(0);
             $table->decimal('total', 12, 2);
             $table->enum('status', [
-                'pending', 'paid', 'cancelled', 'refunded', 'expired'
+                'pending', 'paid', 'cancelled', 'refunded', 'expired',
             ])->default('pending');
             $table->string('buyer_name')->nullable();
             $table->string('buyer_email')->nullable();

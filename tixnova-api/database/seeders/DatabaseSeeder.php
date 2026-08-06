@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SuperAdminSeeder::class,
             SampleEventSeeder::class,
+            NarayaFestSeeder::class,
         ]);
     }
 }

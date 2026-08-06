@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Promotor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Event\CreateEventRequest;
+use App\Http\Requests\Event\CreateEventRescheduleRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\Event;
+use App\Services\EventRescheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,12 +15,14 @@ use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
+    public function __construct(private EventRescheduleService $reschedules) {}
+
     /**
      * List all events for the current promotor's tenant.
      */
     public function index(Request $request): JsonResponse
     {
-        $events = Event::with(['category', 'tickets'])
+        $events = Event::with(['category', 'tickets', 'translations'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest()
@@ -32,16 +36,23 @@ class EventController extends Controller
      */
     public function store(CreateEventRequest $request): JsonResponse
     {
-        $data         = $request->validated();
+        $data = $request->validated();
         $data['user_id'] = auth()->id();
-        $data['slug'] = Str::slug($data['title']) . '-' . Str::random(6);
+        $data['slug'] = Str::slug($data['title']).'-'.Str::random(6);
+
+        $translations = $data['translations'] ?? null;
+        unset($data['translations']);
 
         $event = Event::create($data);
+
+        if ($translations && is_array($translations)) {
+            $this->saveTranslations($event, $translations);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Event berhasil dibuat. Silakan upload banner dan tambahkan tiket.',
-            'data'    => $event->load(['category', 'tickets']),
+            'data' => $event->load(['category', 'tickets', 'translations']),
         ], 201);
     }
 
@@ -52,7 +63,7 @@ class EventController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $event->load(['category', 'tickets', 'user']),
+            'data' => $event->load(['category', 'tickets', 'user', 'translations', 'reschedules' => fn ($query) => $query->latest()]),
         ]);
     }
 
@@ -63,20 +74,49 @@ class EventController extends Controller
     {
         $this->authorizeEvent($event);
 
-        if (!in_array($event->status, ['draft', 'rejected'])) {
+        if (! in_array($event->status, ['draft', 'rejected'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Event yang sudah disubmit tidak dapat diubah. Hubungi admin.',
             ], 422);
         }
 
-        $event->update($request->validated());
+        $data = $request->validated();
+        $translations = $data['translations'] ?? null;
+        unset($data['translations']);
+
+        $event->update($data);
+
+        if ($translations && is_array($translations)) {
+            $this->saveTranslations($event, $translations);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Event berhasil diperbarui.',
-            'data'    => $event->fresh(['category', 'tickets']),
+            'data' => $event->fresh(['category', 'tickets', 'translations']),
         ]);
+    }
+
+    private function saveTranslations(Event $event, array $translations): void
+    {
+        foreach ($translations as $locale => $transData) {
+            $loc = is_numeric($locale) && isset($transData['locale']) ? $transData['locale'] : $locale;
+            if (! empty($loc) && is_array($transData)) {
+                $event->translations()->updateOrCreate(
+                    ['locale' => $loc],
+                    [
+                        'title' => $transData['title'] ?? $event->title,
+                        'description' => $transData['description'] ?? null,
+                        'short_desc' => $transData['short_desc'] ?? null,
+                        'venue_detail' => $transData['venue_detail'] ?? null,
+                        'meta_title' => $transData['meta_title'] ?? null,
+                        'meta_description' => $transData['meta_description'] ?? null,
+                        'status' => 'published',
+                    ]
+                );
+            }
+        }
     }
 
     /**
@@ -121,8 +161,19 @@ class EventController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Banner berhasil diupload.',
-            'data'    => ['banner_url' => Storage::disk('public')->url($path)],
+            'data' => ['banner_url' => Storage::disk('public')->url($path)],
         ]);
+    }
+
+    public function requestReschedule(CreateEventRescheduleRequest $request, Event $event): JsonResponse
+    {
+        $reschedule = $this->reschedules->request($event, $request->user(), $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan perubahan jadwal berhasil dikirim untuk review admin.',
+            'data' => $reschedule,
+        ], 201);
     }
 
     /**
@@ -132,10 +183,10 @@ class EventController extends Controller
     {
         $this->authorizeEvent($event);
 
-        if (!in_array($event->status, ['draft', 'rejected'])) {
+        if (! in_array($event->status, ['draft', 'rejected'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Event tidak dapat disubmit saat ini. Status: ' . $event->status,
+                'message' => 'Event tidak dapat disubmit saat ini. Status: '.$event->status,
             ], 422);
         }
 
@@ -152,7 +203,7 @@ class EventController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Event berhasil disubmit untuk review. Menunggu persetujuan admin.',
-            'data'    => $event,
+            'data' => $event,
         ]);
     }
 

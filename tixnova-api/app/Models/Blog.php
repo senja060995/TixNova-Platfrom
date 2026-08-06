@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Blog extends Model
 {
@@ -18,7 +19,7 @@ class Blog extends Model
     ];
 
     protected $casts = [
-        'tags'         => 'array',
+        'tags' => 'array',
         'published_at' => 'datetime',
     ];
 
@@ -37,11 +38,16 @@ class Blog extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function translations(): HasMany
+    {
+        return $this->hasMany(BlogContentTranslation::class);
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-                     ->whereNotNull('published_at')
-                     ->where('published_at', '<=', now());
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     public function getRouteKeyName(): string

@@ -1270,7 +1270,9 @@ tests/
 
 ## 📅 Roadmap Pengembangan
 
-### Phase 1 — MVP (Bulan 1-2)
+> **⚠️ UPDATE (Agustus 2026):** Roadmap resmi kini mengacu pada **`docs/MASTER_BLUEPRINT.md` (TIXNOVA 2.0 — AI-Powered Event Growth & Operating System)**. Fase lama di bawah (Phase 1–3) dipertahankan sebagai **catatan historis** yang sudah tervalidasi audit. **Phase 4–5 lama (ticketing-centric) diganti** oleh Fase 1–6 baru yang selaras dengan Blueprint 2.0. Arah produk berubah dari "Platform Ticketing" menjadi **"Event Growth OS"** — ticketing hanyalah salah satu modul.
+
+### Phase 1 — MVP (Bulan 1-2) — [100% COMPLETED] — *HISTORIS*
 - [x] Auth system (register, login, roles)
 - [x] Tenant management
 - [x] CRUD Event
@@ -1282,32 +1284,84 @@ tests/
 - [x] Landing page + event browse
 - [x] Basic dashboard promotor
 
-### Phase 2 — Core Features (Bulan 3-4)
-- [ ] QR Scanner app (React Native / PWA)
-- [ ] Blog system
-- [ ] Voucher & diskon
-- [ ] Laporan & export PDF/Excel
-- [ ] Dashboard super admin lengkap
-- [ ] Xendit integration
-- [ ] WhatsApp notification
+### Phase 2 — Core Features (Bulan 3-4) — [100% COMPLETED] — *HISTORIS*
+- [x] QR Scanner app (Web Scanner di `/dashboard/scan`)
+- [x] Blog system (Blog CRUD Promotor/Admin & Public Blog)
+- [x] Voucher & diskon
+- [x] Laporan & export PDF/Excel
+- [x] Dashboard super admin lengkap
+- [x] Xendit integration
+- [x] WhatsApp notification
 
-### Phase 3 — Growth Features (Bulan 5-6)
-- [ ] Referral / affiliate system
-- [ ] Seat map builder
-- [ ] Refund & reschedule
-- [ ] Mobile app (React Native)
-- [ ] Advanced analytics
-- [ ] Multi-language (ID/EN)
-- [ ] Custom domain per tenant
+### Phase 3 — Growth Features (Bulan 5-6) — [85% COMPLETED] — *HISTORIS*
+- [x] Referral / affiliate system
+- [x] Seat map builder & seat picker
+- [x] Refund & reschedule (Pengajuan, Review Promotor, Exec Admin & Ubah Jadwal)
+- [x] Advanced analytics (Grafik Pendapatan, Tiket Per Category, Laporan Komisi)
+- [x] Multi-language (ID/EN) — *Baru saja tuntas di seluruh API & Frontend*
+- [ ] Custom domain per tenant → *dimigrasikan ke modul White Label & Custom Domain (Blueprint Fase 3)*
+- [ ] Mobile app native (React Native) → *diganti Mobile App + Wallet & PWA (Blueprint Fase 2-3)*
 
-### Phase 4 — Scale (Bulan 7+)
-- [ ] Marketplace tiket resale
-- [ ] Live streaming integration
-- [ ] NFT ticket (Web3)
-- [ ] B2B corporate ticketing
-- [ ] API marketplace (open API)
+### Fase 1 — Foundation (30-90 Hari) — [AKTIF]
+> **Berbayar dulu utang teknis, lalu definisikan kategori baru.**
+- [ ] Fix bug High: Xendit webhook 500 (`routes/api.php:106`), `TicketController::update` crash, `/auth/refresh` mismatch
+- [ ] Fix free-order (order tanpa pembayaran valid), admin fee hardcoded Rp5.000 → configurable per tenant
+- [ ] CI/CD (GitHub Actions: test + lint), Docker, Redis (cache + queue)
+- [ ] Rate limit auth, CORS produksi, bersihkan kredensial seed
+- [ ] Rebrand: positioning "AI-Powered Event Growth & Operating System" + tagline baru
+- [ ] Event Intelligence dashboard v1 (realtime sales/scan)
+- [ ] Affiliate link tracking v1 (perluasan `referrals`)
+- [ ] Trust Badge & EO Trust Score v1 (🟢 Guaranteed / 🟡 Verified / ⚪ Standard)
+- [ ] Onboarding EO baru + multi-language live
+- [ ] Sinkronisasi dokumentasi dengan kode
+
+### Fase 2 — Growth Engine (6-12 Bulan)
+> **Platform menjadi mesin permintaan (demand engine), bukan distributor pasif.**
+- [ ] Distribution OS penuh (embed widget, QR flyer, deep-link, channel tracking)
+- [ ] Affiliate & Influencer OS lengkap (payout otomatis saat tiket ter-scan)
+- [x] Community OS + revenue share (fan club, komunitas, kampus, korporat)
+- [ ] Campaign OS (promo, bundling, early bird, tiered price)
+- [ ] Trust Ledger v1 (escrow EO, guaranteed auto-refund)
+- [ ] Event ERP v1 (budget, timeline, checklist produksi)
+- [ ] Event CRM v1 (segmentasi RFM, re-marketing)
+- [ ] AI Pricing & Demand v1 (rule + statistik)
+- [ ] Data warehouse + feature store
+- [ ] Mobile PWA (app-lite, wallet QR)
+
+### Fase 3 — Ecosystem (12-24 Bulan)
+> **Buka lapisan B2B & platform; monetisasi beragam.**
+- [ ] Sponsor OS + Proof-of-Attendance Report
+- [ ] Vendor Marketplace + escrow
+- [ ] Public API + SDK/Widget + Developer Portal
+- [ ] White Label + custom domain (menuntaskan Phase 3 lama)
+- [ ] AI Marketing (auto-segment + auto-copy)
+- [ ] Finance OS (payout scheduler, reconciliation, pajak)
+- [ ] AI Fraud & Ops
+- [ ] Mobile native app + wallet
+
+### Fase 4 — Marketplaces & Intelligence (2-3 Tahun)
+- [ ] Venue Marketplace
+- [ ] Talent Marketplace + escrow artis (DP lock 50%)
+- [ ] Creator Marketplace (deliverable-based payout)
+- [ ] AI Matching penuh (EO↔sponsor/vendor/talent/venue/creator)
+- [ ] Financing untuk EO (berbasis pre-sale tiket)
+- [ ] Insurance add-on (perlindungan pembatalan)
+
+### Fase 5 — Global (3-5 Tahun)
+- [ ] Ekspansi Singapura & Malaysia
+- [ ] Multi-currency + multi-gateway penuh
+- [ ] Lisensi white-label ke operator lokal negara lain
+- [ ] Developer economy & plugin marketplace
+
+### Fase 6 — 10 Tahun (Visi 2036)
+- [ ] AI Feasibility + synthetic data
+- [ ] Ekspansi MEA / global
+- [ ] Menjadi standar industri event (kategori leader)
+- [ ] IPO / strategi exit
+
+> **Catatan:** Detail lengkap, alasan bisnis/teknis, estimasi revenue, kompleksitas, dan prioritas tiap modul ada di `docs/MASTER_BLUEPRINT.md`.
 
 ---
 
 *Dokumen ini dibuat Oleh PT Ragam Manfaat Sinergi*  
-*Versi 1.0 — 29 Juli 2026*
+*Versi 2.0 — Agustus 2026 (Roadmap selaras dengan `docs/MASTER_BLUEPRINT.md`)*

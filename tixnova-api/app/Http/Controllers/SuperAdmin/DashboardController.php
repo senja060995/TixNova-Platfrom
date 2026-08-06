@@ -15,22 +15,22 @@ class DashboardController extends Controller
     public function index(): JsonResponse
     {
         $stats = [
-            'total_tenants'       => Tenant::count(),
-            'active_tenants'      => Tenant::active()->count(),
-            'pending_tenants'     => Tenant::where('status', 'pending')->count(),
-            'total_events'        => Event::withoutGlobalScope('tenant')->count(),
-            'pending_events'      => Event::withoutGlobalScope('tenant')->where('status', 'pending')->count(),
-            'approved_events'     => Event::withoutGlobalScope('tenant')->where('status', 'approved')->count(),
-            'total_users'         => User::count(),
-            'total_orders'        => Order::withoutGlobalScope('tenant')->count(),
-            'paid_orders'         => Order::withoutGlobalScope('tenant')->where('status', 'paid')->count(),
-            'total_revenue'       => Order::withoutGlobalScope('tenant')->where('status', 'paid')->sum('total'),
+            'total_tenants' => Tenant::count(),
+            'active_tenants' => Tenant::active()->count(),
+            'pending_tenants' => Tenant::where('status', 'pending')->count(),
+            'total_events' => Event::withoutGlobalScope('tenant')->count(),
+            'pending_events' => Event::withoutGlobalScope('tenant')->where('status', 'pending')->count(),
+            'approved_events' => Event::withoutGlobalScope('tenant')->where('status', 'approved')->count(),
+            'total_users' => User::count(),
+            'total_orders' => Order::withoutGlobalScope('tenant')->count(),
+            'paid_orders' => Order::withoutGlobalScope('tenant')->where('status', 'paid')->count(),
+            'total_revenue' => Order::withoutGlobalScope('tenant')->where('status', 'paid')->sum('total'),
             'platform_commission' => Order::withoutGlobalScope('tenant')->where('status', 'paid')->sum('commission_fee'),
         ];
 
         $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'pgsql' 
-            ? "to_char(created_at, 'YYYY-MM')" 
+        $monthExpr = $driver === 'pgsql'
+            ? "to_char(created_at, 'YYYY-MM')"
             : "DATE_FORMAT(created_at, '%Y-%m')";
 
         // Revenue chart (last 12 months)
@@ -56,10 +56,10 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'stats'        => $stats,
-                'revenue_chart'=> $revenueChart,
-                'top_tenants'  => $topTenants,
+            'data' => [
+                'stats' => $stats,
+                'revenue_chart' => $revenueChart,
+                'top_tenants' => $topTenants,
             ],
         ]);
     }

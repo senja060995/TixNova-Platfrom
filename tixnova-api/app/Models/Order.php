@@ -14,21 +14,21 @@ class Order extends Model
 
     protected $fillable = [
         'order_code', 'user_id', 'event_id', 'tenant_id', 'voucher_id',
-        'referral_code', 'subtotal', 'discount', 'admin_fee',
+        'referral_code', 'community_code', 'source', 'subtotal', 'discount', 'admin_fee',
         'commission_fee', 'total', 'status',
         'buyer_name', 'buyer_email', 'buyer_phone',
         'notes', 'expired_at', 'paid_at', 'cancelled_at',
     ];
 
     protected $casts = [
-        'subtotal'       => 'decimal:2',
-        'discount'       => 'decimal:2',
-        'admin_fee'      => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'admin_fee' => 'decimal:2',
         'commission_fee' => 'decimal:2',
-        'total'          => 'decimal:2',
-        'expired_at'     => 'datetime',
-        'paid_at'        => 'datetime',
-        'cancelled_at'   => 'datetime',
+        'total' => 'decimal:2',
+        'expired_at' => 'datetime',
+        'paid_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     // ─── Relations ────────────────────────────────────────────
@@ -63,6 +63,11 @@ class Order extends Model
         return $this->hasOne(Payment::class)->latest();
     }
 
+    public function refund(): HasOne
+    {
+        return $this->hasOne(Refund::class);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────
 
     public function isPaid(): bool
@@ -82,7 +87,7 @@ class Order extends Model
 
         static::creating(function ($order) {
             if (empty($order->order_code)) {
-                $order->order_code = 'TIX-' . date('Ymd') . '-' . strtoupper(\Str::random(6));
+                $order->order_code = 'TIX-'.date('Ymd').'-'.strtoupper(\Str::random(6));
             }
             if (empty($order->expired_at)) {
                 $order->expired_at = now()->addHours(2);

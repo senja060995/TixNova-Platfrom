@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Promotor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
-use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,18 +16,18 @@ class BlogController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = auth()->user();
-        
-        $query = Blog::with(['author', 'category'])
+
+        $query = Blog::with(['author', 'category', 'translations'])
             ->where('tenant_id', $user->tenant_id)
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($request->search, fn ($q, $s) => $q->where('title', 'ilike', "%{$s}%"))
+            ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->latest();
 
         $blogs = $query->paginate($request->per_page ?? 15);
 
         return response()->json([
             'success' => true,
-            'data'    => $blogs,
+            'data' => $blogs,
         ]);
     }
 
@@ -40,22 +39,32 @@ class BlogController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'title'           => ['required', 'string', 'max:255'],
-            'content'         => ['required', 'string'],
-            'excerpt'         => ['nullable', 'string', 'max:500'],
-            'category_id'     => ['nullable', 'exists:categories,id'],
-            'banner'          => ['nullable', 'url', 'max:500'],
-            'meta_title'      => ['nullable', 'string', 'max:255'],
-            'meta_description'=> ['nullable', 'string', 'max:500'],
-            'tags'            => ['nullable', 'array'],
-            'tags.*'          => ['string', 'max:50'],
-            'status'          => ['required', 'in:draft,published'],
-            'is_featured'     => ['boolean'],
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'banner' => ['nullable', 'url', 'max:500'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:50'],
+            'status' => ['required', 'in:draft,published'],
+            'is_featured' => ['boolean'],
+            'translations' => ['nullable', 'array'],
+            'translations.*.locale' => ['nullable', 'string', 'max:5'],
+            'translations.*.title' => ['nullable', 'string', 'max:255'],
+            'translations.*.content' => ['nullable', 'string'],
+            'translations.*.excerpt' => ['nullable', 'string', 'max:500'],
+            'translations.*.meta_title' => ['nullable', 'string', 'max:255'],
+            'translations.*.meta_description' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $translations = $validated['translations'] ?? null;
+        unset($validated['translations']);
 
         $validated['tenant_id'] = $user->tenant_id;
         $validated['user_id'] = $user->id;
-        $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
+        $validated['slug'] = Str::slug($validated['title']).'-'.Str::random(6);
 
         if ($validated['status'] === 'published' && ! $request->filled('published_at')) {
             $validated['published_at'] = now();
@@ -63,10 +72,14 @@ class BlogController extends Controller
 
         $blog = Blog::create($validated);
 
+        if ($translations && is_array($translations)) {
+            $this->saveBlogTranslations($blog, $translations);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Blog berhasil dibuat.',
-            'data'    => $blog->load(['author', 'category']),
+            'data' => $blog->load(['author', 'category', 'translations']),
         ], 201);
     }
 
@@ -79,7 +92,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blog->load(['author', 'category', 'tenant']),
+            'data' => $blog->load(['author', 'category', 'tenant', 'translations']),
         ]);
     }
 
@@ -91,21 +104,31 @@ class BlogController extends Controller
         $this->authorizeTenant($blog);
 
         $validated = $request->validate([
-            'title'           => ['sometimes', 'required', 'string', 'max:255'],
-            'content'         => ['sometimes', 'required', 'string'],
-            'excerpt'         => ['nullable', 'string', 'max:500'],
-            'category_id'     => ['nullable', 'exists:categories,id'],
-            'banner'          => ['nullable', 'url', 'max:500'],
-            'meta_title'      => ['nullable', 'string', 'max:255'],
-            'meta_description'=> ['nullable', 'string', 'max:500'],
-            'tags'            => ['nullable', 'array'],
-            'tags.*'          => ['string', 'max:50'],
-            'status'          => ['sometimes', 'required', 'in:draft,published'],
-            'is_featured'     => ['boolean'],
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
+            'content' => ['sometimes', 'required', 'string'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'banner' => ['nullable', 'url', 'max:500'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:50'],
+            'status' => ['sometimes', 'required', 'in:draft,published'],
+            'is_featured' => ['boolean'],
+            'translations' => ['nullable', 'array'],
+            'translations.*.locale' => ['nullable', 'string', 'max:5'],
+            'translations.*.title' => ['nullable', 'string', 'max:255'],
+            'translations.*.content' => ['nullable', 'string'],
+            'translations.*.excerpt' => ['nullable', 'string', 'max:500'],
+            'translations.*.meta_title' => ['nullable', 'string', 'max:255'],
+            'translations.*.meta_description' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $translations = $validated['translations'] ?? null;
+        unset($validated['translations']);
+
         if (isset($validated['title'])) {
-            $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
+            $validated['slug'] = Str::slug($validated['title']).'-'.Str::random(6);
         }
 
         if (($validated['status'] ?? $blog->status) === 'published' && ! $blog->published_at) {
@@ -114,11 +137,35 @@ class BlogController extends Controller
 
         $blog->update($validated);
 
+        if ($translations && is_array($translations)) {
+            $this->saveBlogTranslations($blog, $translations);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Blog berhasil diperbarui.',
-            'data'    => $blog->load(['author', 'category']),
+            'data' => $blog->load(['author', 'category', 'translations']),
         ]);
+    }
+
+    private function saveBlogTranslations(Blog $blog, array $translations): void
+    {
+        foreach ($translations as $locale => $transData) {
+            $loc = is_numeric($locale) && isset($transData['locale']) ? $transData['locale'] : $locale;
+            if (! empty($loc) && is_array($transData)) {
+                $blog->translations()->updateOrCreate(
+                    ['locale' => $loc],
+                    [
+                        'title' => $transData['title'] ?? $blog->title,
+                        'content' => $transData['content'] ?? null,
+                        'excerpt' => $transData['excerpt'] ?? null,
+                        'meta_title' => $transData['meta_title'] ?? null,
+                        'meta_description' => $transData['meta_description'] ?? null,
+                        'status' => 'published',
+                    ]
+                );
+            }
+        }
     }
 
     /**
@@ -151,14 +198,14 @@ class BlogController extends Controller
         }
 
         $blog->update([
-            'status'       => 'published',
+            'status' => 'published',
             'published_at' => now(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Blog berhasil dipublikasikan.',
-            'data'    => $blog,
+            'data' => $blog,
         ]);
     }
 
@@ -183,7 +230,7 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Blog berhasil di-unpublish (kembali ke draft).',
-            'data'    => $blog,
+            'data' => $blog,
         ]);
     }
 
@@ -205,7 +252,7 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Banner berhasil diupload.',
-            'data'    => ['banner' => $path],
+            'data' => ['banner' => $path],
         ]);
     }
 

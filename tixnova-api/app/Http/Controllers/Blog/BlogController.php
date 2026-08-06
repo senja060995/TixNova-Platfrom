@@ -20,8 +20,8 @@ class BlogController extends Controller
             ->when($request->category, fn ($q, $c) => $q->whereHas('category', fn ($q2) => $q2->where('slug', $c)))
             ->when($request->search, fn ($q, $s) => $q->where(function ($q2) use ($s) {
                 $q2->where('title', 'ilike', "%{$s}%")
-                   ->orWhere('excerpt', 'ilike', "%{$s}%")
-                   ->orWhere('content', 'ilike', "%{$s}%");
+                    ->orWhere('excerpt', 'ilike', "%{$s}%")
+                    ->orWhere('content', 'ilike', "%{$s}%");
             }))
             ->when($request->author, fn ($q, $a) => $q->whereHas('author', fn ($q2) => $q2->where('name', 'ilike', "%{$a}%")))
             ->when($request->tag, fn ($q, $t) => $q->whereJsonContains('tags', $t))
@@ -32,7 +32,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blogs,
+            'data' => $blogs,
         ]);
     }
 
@@ -51,7 +51,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blog,
+            'data' => $blog,
         ]);
     }
 
@@ -67,7 +67,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $categories,
+            'data' => $categories,
         ]);
     }
 
@@ -85,7 +85,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blogs,
+            'data' => $blogs,
         ]);
     }
 }

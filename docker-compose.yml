@@ -1,0 +1,65 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: tixnova_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-tixnova}
+      MYSQL_USER: ${DB_USERNAME:-tixnova}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: tixnova_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: ./tixnova-api
+      dockerfile: Dockerfile
+    container_name: tixnova_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - ./tixnova-api/.env
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-tixnova}
+      DB_USERNAME: ${DB_USERNAME:-tixnova}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+    ports:
+      - "8001:9000"
+    volumes:
+      - ./tixnova-api:/var/www/html
+    command: >
+      sh -c "php artisan migrate --force &&
+             php-fpm"
+
+volumes:
+  db_data:
+  redis_data:

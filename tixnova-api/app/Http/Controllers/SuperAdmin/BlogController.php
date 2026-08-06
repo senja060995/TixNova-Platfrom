@@ -28,7 +28,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blogs,
+            'data' => $blogs,
         ]);
     }
 
@@ -38,23 +38,23 @@ class BlogController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'title'            => 'required|string|max:255',
-            'category_id'      => 'nullable|exists:categories,id',
-            'excerpt'          => 'required|string|max:500',
-            'content'          => 'required|string',
-            'banner'           => 'nullable|string',
-            'location'         => 'nullable|string|max:255',
-            'tags'             => 'nullable',
-            'meta_title'       => 'nullable|string|max:255',
+            'title' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
+            'excerpt' => 'required|string|max:500',
+            'content' => 'required|string',
+            'banner' => 'nullable|string',
+            'location' => 'nullable|string|max:255',
+            'tags' => 'nullable',
+            'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'status'           => 'required|in:draft,published',
+            'status' => 'required|in:draft,published',
         ]);
 
         $slug = Str::slug($request->title);
         $originalSlug = $slug;
         $count = 1;
         while (Blog::withoutGlobalScopes()->where('slug', $slug)->exists()) {
-            $slug = "{$originalSlug}-" . $count++;
+            $slug = "{$originalSlug}-".$count++;
         }
 
         // Process tags if string
@@ -64,27 +64,27 @@ class BlogController extends Controller
         }
 
         $blog = Blog::create([
-            'tenant_id'        => null, // Platform official blog
-            'user_id'          => auth()->id(),
-            'category_id'      => $request->category_id,
-            'title'            => $request->title,
-            'slug'             => $slug,
-            'excerpt'          => $request->excerpt,
-            'content'          => $request->content,
-            'banner'           => $request->banner,
-            'location'         => $request->location,
-            'tags'             => $tags,
-            'meta_title'       => $request->meta_title ?: $request->title,
+            'tenant_id' => null, // Platform official blog
+            'user_id' => auth()->id(),
+            'category_id' => $request->category_id,
+            'title' => $request->title,
+            'slug' => $slug,
+            'excerpt' => $request->excerpt,
+            'content' => $request->content,
+            'banner' => $request->banner,
+            'location' => $request->location,
+            'tags' => $tags,
+            'meta_title' => $request->meta_title ?: $request->title,
             'meta_description' => $request->meta_description ?: $request->excerpt,
-            'status'           => $request->status,
-            'published_at'     => $request->status === 'published' ? now() : null,
-            'view_count'       => 0,
+            'status' => $request->status,
+            'published_at' => $request->status === 'published' ? now() : null,
+            'view_count' => 0,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Artikel blog berhasil dibuat!',
-            'data'    => $blog->load(['author', 'category']),
+            'data' => $blog->load(['author', 'category']),
         ], 201);
     }
 
@@ -99,7 +99,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blog,
+            'data' => $blog,
         ]);
     }
 
@@ -111,16 +111,16 @@ class BlogController extends Controller
         $blog = Blog::withoutGlobalScopes()->findOrFail($id);
 
         $request->validate([
-            'title'            => 'required|string|max:255',
-            'category_id'      => 'nullable|exists:categories,id',
-            'excerpt'          => 'required|string|max:500',
-            'content'          => 'required|string',
-            'banner'           => 'nullable|string',
-            'location'         => 'nullable|string|max:255',
-            'tags'             => 'nullable',
-            'meta_title'       => 'nullable|string|max:255',
+            'title' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
+            'excerpt' => 'required|string|max:500',
+            'content' => 'required|string',
+            'banner' => 'nullable|string',
+            'location' => 'nullable|string|max:255',
+            'tags' => 'nullable',
+            'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'status'           => 'required|in:draft,published',
+            'status' => 'required|in:draft,published',
         ]);
 
         // Process tags if string
@@ -130,19 +130,19 @@ class BlogController extends Controller
         }
 
         $data = [
-            'category_id'      => $request->category_id,
-            'title'            => $request->title,
-            'excerpt'          => $request->excerpt,
-            'content'          => $request->content,
-            'banner'           => $request->banner,
-            'location'         => $request->location,
-            'tags'             => $tags,
-            'meta_title'       => $request->meta_title ?: $request->title,
+            'category_id' => $request->category_id,
+            'title' => $request->title,
+            'excerpt' => $request->excerpt,
+            'content' => $request->content,
+            'banner' => $request->banner,
+            'location' => $request->location,
+            'tags' => $tags,
+            'meta_title' => $request->meta_title ?: $request->title,
             'meta_description' => $request->meta_description ?: $request->excerpt,
-            'status'           => $request->status,
+            'status' => $request->status,
         ];
 
-        if ($request->status === 'published' && !$blog->published_at) {
+        if ($request->status === 'published' && ! $blog->published_at) {
             $data['published_at'] = now();
         }
 
@@ -151,7 +151,7 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Artikel blog berhasil diperbarui!',
-            'data'    => $blog->fresh(['author', 'category']),
+            'data' => $blog->fresh(['author', 'category']),
         ]);
     }
 
@@ -178,14 +178,14 @@ class BlogController extends Controller
         $newStatus = $blog->status === 'published' ? 'draft' : 'published';
 
         $blog->update([
-            'status'       => $newStatus,
+            'status' => $newStatus,
             'published_at' => $newStatus === 'published' ? ($blog->published_at ?? now()) : $blog->published_at,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Status publikasi artikel berhasil diubah.',
-            'data'    => ['status' => $blog->status],
+            'data' => ['status' => $blog->status],
         ]);
     }
 }

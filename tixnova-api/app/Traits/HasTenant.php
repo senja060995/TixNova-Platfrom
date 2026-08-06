@@ -25,7 +25,7 @@ trait HasTenant
                 $tenantId = auth()->user()->tenant_id;
                 if ($tenantId) {
                     $query->where(
-                        (new static)->getTable() . '.tenant_id',
+                        (new static)->getTable().'.tenant_id',
                         $tenantId
                     );
                 }

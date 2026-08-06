@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Event;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
@@ -22,12 +24,12 @@ class EventController extends Controller
 
         // Filter kota
         if ($request->filled('city')) {
-            $query->where('city', 'LIKE', '%' . $request->city . '%');
+            $query->where('city', 'LIKE', '%'.$request->city.'%');
         }
 
         // Filter kategori
         if ($request->filled('category')) {
-            $query->whereHas('category', fn($q) => $q->where('slug', $request->category));
+            $query->whereHas('category', fn ($q) => $q->where('slug', $request->category));
         }
 
         // Filter tanggal
@@ -35,15 +37,15 @@ class EventController extends Controller
             $query->where('start_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->where('start_date', '<=', $request->date_to . ' 23:59:59');
+            $query->where('start_date', '<=', $request->date_to.' 23:59:59');
         }
 
         // Filter harga (berdasarkan tiket termurah)
         if ($request->filled('price_min')) {
-            $query->whereHas('tickets', fn($q) => $q->where('price', '>=', $request->price_min)->where('is_active', true));
+            $query->whereHas('tickets', fn ($q) => $q->where('price', '>=', $request->price_min)->where('is_active', true));
         }
         if ($request->filled('price_max')) {
-            $query->whereHas('tickets', fn($q) => $q->where('price', '<=', $request->price_max)->where('is_active', true));
+            $query->whereHas('tickets', fn ($q) => $q->where('price', '<=', $request->price_max)->where('is_active', true));
         }
 
         // Search
@@ -51,8 +53,8 @@ class EventController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('title', 'LIKE', "%{$s}%")
-                  ->orWhere('venue', 'LIKE', "%{$s}%")
-                  ->orWhere('city', 'LIKE', "%{$s}%");
+                    ->orWhere('venue', 'LIKE', "%{$s}%")
+                    ->orWhere('city', 'LIKE', "%{$s}%");
             });
         }
 
@@ -63,23 +65,23 @@ class EventController extends Controller
 
         // Sort
         match ($request->input('sort', 'upcoming')) {
-            'date_asc'    => $query->orderBy('start_date', 'asc'),
-            'date_desc'   => $query->orderBy('start_date', 'desc'),
-            'price_asc'   => $query->orderByRaw('(SELECT MIN(price) FROM tickets WHERE tickets.event_id = events.id AND tickets.is_active = 1)'),
-            'price_desc'  => $query->orderByRaw('(SELECT MAX(price) FROM tickets WHERE tickets.event_id = events.id AND tickets.is_active = 1) DESC'),
-            'popular'     => $query->orderBy('view_count', 'desc'),
-            default       => $query->orderBy('start_date', 'asc'),
+            'date_asc' => $query->orderBy('start_date', 'asc'),
+            'date_desc' => $query->orderBy('start_date', 'desc'),
+            'price_asc' => $query->orderByRaw('(SELECT MIN(price) FROM tickets WHERE tickets.event_id = events.id AND tickets.is_active = 1)'),
+            'price_desc' => $query->orderByRaw('(SELECT MAX(price) FROM tickets WHERE tickets.event_id = events.id AND tickets.is_active = 1) DESC'),
+            'popular' => $query->orderBy('view_count', 'desc'),
+            default => $query->orderBy('start_date', 'asc'),
         };
 
         $perPage = min((int) $request->input('per_page', 12), 50);
-        $events  = $query->paginate($perPage);
+        $events = $query->paginate($perPage);
 
         // Increment view count lightly (batch, not per request)
         // done separately if needed
 
         return response()->json([
             'success' => true,
-            'data'    => $events,
+            'data' => $events,
         ]);
     }
 
@@ -90,18 +92,21 @@ class EventController extends Controller
     {
         $limit = min((int) $request->input('limit', 8), 20);
 
-        $events = Event::withoutGlobalScopes()
-            ->with(['category:id,name,slug,icon,color', 'tickets:id,event_id,name,type,price,quota,sold,is_active'])
-            ->where('status', 'approved')
-            ->where('is_featured', true)
-            ->where('end_date', '>', now())
-            ->orderBy('start_date', 'asc')
-            ->limit($limit)
-            ->get();
+        $events = Cache::remember('events.featured.'.$limit, 300, function () use ($limit) {
+            return Event::withoutGlobalScopes()
+                ->with(['category:id,name,slug,icon,color', 'tickets:id,event_id,name,type,price,quota,sold,is_active'])
+                ->where('status', 'approved')
+                ->where('is_featured', true)
+                ->where('end_date', '>', now())
+                ->orderBy('start_date', 'asc')
+                ->limit($limit)
+                ->get()
+                ->toArray();
+        });
 
         return response()->json([
             'success' => true,
-            'data'    => $events,
+            'data' => $events,
         ]);
     }
 
@@ -110,36 +115,41 @@ class EventController extends Controller
      */
     public function cities(): JsonResponse
     {
-        $cities = Event::withoutGlobalScopes()
-            ->where('status', 'approved')
-            ->where('end_date', '>', now())
-            ->selectRaw('city, COUNT(*) as event_count')
-            ->groupBy('city')
-            ->orderByDesc('event_count')
-            ->limit(20)
-            ->get()
-            ->map(fn($row) => [
-                'name'       => $row->city,
-                'slug'       => \Illuminate\Support\Str::slug($row->city),
-                'eventCount' => $row->event_count,
-            ]);
+        $cities = Cache::remember('events.cities', 600, function () {
+            return Event::withoutGlobalScopes()
+                ->where('status', 'approved')
+                ->where('end_date', '>', now())
+                ->selectRaw('city, COUNT(*) as event_count')
+                ->groupBy('city')
+                ->orderByDesc('event_count')
+                ->limit(20)
+                ->get()
+                ->map(fn ($row) => [
+                    'name' => $row->city,
+                    'slug' => Str::slug($row->city),
+                    'eventCount' => $row->event_count,
+                ])
+                ->values()
+                ->toArray();
+        });
 
         return response()->json([
             'success' => true,
-            'data'    => $cities,
+            'data' => $cities,
         ]);
     }
 
     /**
      * GET /api/events/{slug} — Detail event.
      */
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
         $event = Event::withoutGlobalScopes()
             ->with([
                 'category:id,name,slug,icon,color',
                 'tickets:id,event_id,name,type,price,quota,sold,min_purchase,max_purchase,sale_start,sale_end,is_active,description,includes,sort_order',
-                'tenant:id,name,slug,logo',
+                'tenant:id,name,slug,logo,trust_score,badge',
+                'translations',
             ])
             ->where('slug', $slug)
             ->where('status', 'approved')
@@ -148,9 +158,22 @@ class EventController extends Controller
         // Increment view count
         $event->increment('view_count');
 
+        $lang = $request->query('lang', $request->header('X-Locale', 'id'));
+        if ($lang && $lang !== 'id') {
+            $translation = $event->translations->firstWhere('locale', $lang);
+            if ($translation) {
+                $event->title = $translation->title ?: $event->title;
+                $event->description = $translation->description ?: $event->description;
+                $event->short_desc = $translation->short_desc ?: $event->short_desc;
+                $event->venue_detail = $translation->venue_detail ?: $event->venue_detail;
+                $event->meta_title = $translation->meta_title ?: $event->meta_title;
+                $event->meta_description = $translation->meta_description ?: $event->meta_description;
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'data'    => $event,
+            'data' => $event,
         ]);
     }
 
@@ -166,7 +189,7 @@ class EventController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $categories,
+            'data' => $categories,
         ]);
     }
 }

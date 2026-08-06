@@ -13,11 +13,11 @@ class CommissionController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => [
+            'data' => [
                 'default_commission' => config('commission.default'),
-                'tiers'              => config('commission.tiers'),
-                'minimum_amount'     => config('commission.minimum_amount'),
-                'maximum_amount'     => config('commission.maximum_amount'),
+                'tiers' => config('commission.tiers'),
+                'minimum_amount' => config('commission.minimum_amount'),
+                'maximum_amount' => config('commission.maximum_amount'),
             ],
         ]);
     }
@@ -26,10 +26,10 @@ class CommissionController extends Controller
     {
         $validated = $request->validate([
             'default_commission' => 'nullable|numeric|min:0|max:100',
-            'tiers'              => 'nullable|array',
-            'tiers.*'            => 'numeric|min:0|max:100',
-            'minimum_amount'     => 'nullable|integer|min:0',
-            'maximum_amount'     => 'nullable|integer|min:0',
+            'tiers' => 'nullable|array',
+            'tiers.*' => 'numeric|min:0|max:100',
+            'minimum_amount' => 'nullable|integer|min:0',
+            'maximum_amount' => 'nullable|integer|min:0',
         ]);
 
         // Update config at runtime (note: this won't persist across requests without writing to .env)
@@ -52,11 +52,11 @@ class CommissionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Commission settings updated (runtime only - update .env for persistence)',
-            'data'    => [
+            'data' => [
                 'default_commission' => config('commission.default'),
-                'tiers'              => config('commission.tiers'),
-                'minimum_amount'     => config('commission.minimum_amount'),
-                'maximum_amount'     => config('commission.maximum_amount'),
+                'tiers' => config('commission.tiers'),
+                'minimum_amount' => config('commission.minimum_amount'),
+                'maximum_amount' => config('commission.maximum_amount'),
             ],
         ]);
     }

@@ -37,7 +37,7 @@ class CheckTenantAccess
             if (! $user->tenant->isActive()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your tenant account is not active. Status: ' . $user->tenant->status,
+                    'message' => 'Your tenant account is not active. Status: '.$user->tenant->status,
                 ], 403);
             }
         }

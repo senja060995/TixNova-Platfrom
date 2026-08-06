@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ->where('status', 'paid')
             ->sum('subtotal');
 
-        $ticketsSold = Ticket::whereHas('event', fn($q) => $q->withoutGlobalScopes()->where('tenant_id', $tenantId))
+        $ticketsSold = Ticket::whereHas('event', fn ($q) => $q->withoutGlobalScopes()->where('tenant_id', $tenantId))
             ->sum('sold');
 
         $recentOrders = Order::withoutGlobalScopes()
@@ -50,13 +50,13 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'total_events'        => $eventsCount,
-                'active_events'       => $activeEventsCount,
-                'total_orders'        => $totalOrders,
-                'total_revenue'       => (float) $totalRevenue,
-                'tickets_sold'        => (int) $ticketsSold,
-                'recent_orders'       => $recentOrders,
+            'data' => [
+                'total_events' => $eventsCount,
+                'active_events' => $activeEventsCount,
+                'total_orders' => $totalOrders,
+                'total_revenue' => (float) $totalRevenue,
+                'tickets_sold' => (int) $ticketsSold,
+                'recent_orders' => $recentOrders,
             ],
         ]);
     }

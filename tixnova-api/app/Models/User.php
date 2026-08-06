@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\HasTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,11 +15,12 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name', 'email', 'password',
         'tenant_id', 'phone', 'avatar',
+        'gender', 'birth_date', 'city',
         'is_active', 'last_login_at',
         'referral_code', 'referred_by',
     ];
@@ -33,9 +33,10 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'last_login_at'     => 'datetime',
-            'password'          => 'hashed',
-            'is_active'         => 'boolean',
+            'last_login_at' => 'datetime',
+            'birth_date' => 'date',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -59,6 +60,11 @@ class User extends Authenticatable
     public function referralCode(): HasOne
     {
         return $this->hasOne(ReferralCode::class);
+    }
+
+    public function referralRewards(): HasMany
+    {
+        return $this->hasMany(ReferralReward::class, 'referrer_id');
     }
 
     public function referredBy(): BelongsTo

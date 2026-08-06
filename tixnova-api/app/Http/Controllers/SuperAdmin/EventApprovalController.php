@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Event\ReviewEventRescheduleRequest;
 use App\Models\Event;
+use App\Models\EventReschedule;
+use App\Services\EventRescheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class EventApprovalController extends Controller
 {
+    public function __construct(private EventRescheduleService $reschedules) {}
+
     /**
      * List events pending approval.
      */
@@ -36,7 +41,7 @@ class EventApprovalController extends Controller
         }
 
         $event->update([
-            'status'      => 'approved',
+            'status' => 'approved',
             'approved_at' => now(),
             'approved_by' => auth()->id(),
             'reject_reason' => null,
@@ -45,7 +50,7 @@ class EventApprovalController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Event berhasil diapprove.',
-            'data'    => $event,
+            'data' => $event,
         ]);
     }
 
@@ -66,15 +71,41 @@ class EventApprovalController extends Controller
         }
 
         $event->update([
-            'status'        => 'rejected',
+            'status' => 'rejected',
             'reject_reason' => $request->reason,
-            'approved_by'   => auth()->id(),
+            'approved_by' => auth()->id(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Event berhasil direject.',
-            'data'    => $event,
+            'data' => $event,
+        ]);
+    }
+
+    public function reschedules(Request $request): JsonResponse
+    {
+        $reschedules = EventReschedule::with(['event:id,title,venue,city', 'requester'])
+            ->where('status', 'requested')
+            ->latest()
+            ->paginate($request->integer('per_page', 15));
+
+        return response()->json(['success' => true, 'data' => $reschedules]);
+    }
+
+    public function reviewReschedule(ReviewEventRescheduleRequest $request, EventReschedule $reschedule): JsonResponse
+    {
+        $reschedule = $this->reschedules->review(
+            $reschedule,
+            $request->user(),
+            $request->boolean('approved'),
+            $request->input('review_note'),
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $reschedule->status === 'approved' ? 'Perubahan jadwal disetujui dan pembeli akan diberi notifikasi.' : 'Perubahan jadwal ditolak.',
+            'data' => $reschedule,
         ]);
     }
 
@@ -88,7 +119,7 @@ class EventApprovalController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Status featured berhasil diubah.',
-            'data'    => ['is_featured' => $event->is_featured],
+            'data' => ['is_featured' => $event->is_featured],
         ]);
     }
 }

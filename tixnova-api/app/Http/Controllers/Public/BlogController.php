@@ -7,7 +7,6 @@ use App\Models\Blog;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class BlogController extends Controller
 {
@@ -32,16 +31,16 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $blogs,
+            'data' => $blogs,
         ]);
     }
 
     /**
      * Display the specified blog by slug.
      */
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
-        $blog = Blog::with(['author', 'category', 'tenant'])
+        $blog = Blog::with(['author', 'category', 'tenant', 'translations'])
             ->where('slug', $slug)
             ->where('status', 'published')
             ->whereNotNull('published_at')
@@ -49,6 +48,18 @@ class BlogController extends Controller
 
         // Increment view count
         $blog->increment('view_count');
+
+        $lang = $request->query('lang', $request->header('X-Locale', 'id'));
+        if ($lang && $lang !== 'id') {
+            $translation = $blog->translations->firstWhere('locale', $lang);
+            if ($translation) {
+                $blog->title = $translation->title ?: $blog->title;
+                $blog->content = $translation->content ?: $blog->content;
+                $blog->excerpt = $translation->excerpt ?: $blog->excerpt;
+                $blog->meta_title = $translation->meta_title ?: $blog->meta_title;
+                $blog->meta_description = $translation->meta_description ?: $blog->meta_description;
+            }
+        }
 
         // Get related blogs
         $related = Blog::with(['author', 'category'])
@@ -62,8 +73,8 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'blog'    => $blog,
+            'data' => [
+                'blog' => $blog,
                 'related' => $related,
             ],
         ]);
@@ -81,7 +92,7 @@ class BlogController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $categories,
+            'data' => $categories,
         ]);
     }
 }

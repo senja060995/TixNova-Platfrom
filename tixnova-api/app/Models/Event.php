@@ -4,9 +4,10 @@ namespace App\Models;
 
 use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
@@ -23,14 +24,14 @@ class Event extends Model
     ];
 
     protected $casts = [
-        'tags'        => 'array',
-        'start_date'  => 'datetime',
-        'end_date'    => 'datetime',
+        'tags' => 'array',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
         'approved_at' => 'datetime',
         'is_featured' => 'boolean',
-        'is_free'     => 'boolean',
-        'latitude'    => 'decimal:8',
-        'longitude'   => 'decimal:8',
+        'is_free' => 'boolean',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     // ─── Relations ────────────────────────────────────────────
@@ -60,9 +61,54 @@ class Event extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function sponsorships(): HasMany
+    {
+        return $this->hasMany(Sponsorship::class);
+    }
+
+    public function vendorBookings(): HasMany
+    {
+        return $this->hasMany(VendorBooking::class);
+    }
+
+    public function rfqs(): HasMany
+    {
+        return $this->hasMany(Rfq::class);
+    }
+
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    public function seatMap(): HasOne
+    {
+        return $this->hasOne(SeatMap::class);
+    }
+
+    public function reschedules(): HasMany
+    {
+        return $this->hasMany(EventReschedule::class);
+    }
+
+    public function budgetItems(): HasMany
+    {
+        return $this->hasMany(EventBudgetItem::class);
+    }
+
+    public function timelineItems(): HasMany
+    {
+        return $this->hasMany(EventTimelineItem::class);
+    }
+
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(EventChecklistItem::class);
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(EventContentTranslation::class);
     }
 
     // ─── Scopes ───────────────────────────────────────────────

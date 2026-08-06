@@ -4,7 +4,6 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,14 +25,14 @@ class TenantController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $tenant->load(['users', 'events']),
+            'data' => $tenant->load(['users', 'events']),
         ]);
     }
 
     public function activate(Tenant $tenant): JsonResponse
     {
         $tenant->update([
-            'status'      => 'active',
+            'status' => 'active',
             'approved_at' => now(),
             'approved_by' => auth()->id(),
         ]);
@@ -61,7 +60,7 @@ class TenantController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Komisi tenant berhasil diperbarui.',
-            'data'    => ['commission' => $tenant->commission],
+            'data' => ['commission' => $tenant->commission],
         ]);
     }
 }

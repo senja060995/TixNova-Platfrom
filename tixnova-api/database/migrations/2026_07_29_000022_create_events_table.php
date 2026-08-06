@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('poster')->nullable();
             $table->enum('status', [
                 'draft', 'pending', 'approved', 'rejected',
-                'ongoing', 'completed', 'cancelled'
+                'ongoing', 'completed', 'cancelled',
             ])->default('draft');
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_free')->default(false);

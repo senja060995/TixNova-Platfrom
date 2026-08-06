@@ -11,44 +11,46 @@ class VoucherSeeder extends Seeder
     public function run(): void
     {
         $tenant = Tenant::first();
-        if (! $tenant) return;
+        if (! $tenant) {
+            return;
+        }
 
         $vouchers = [
             [
-                'code'           => 'TIX50K',
-                'discount_type'  => 'fixed',
+                'code' => 'TIX50K',
+                'discount_type' => 'fixed',
                 'discount_value' => 50000,
-                'min_purchase'   => 200000,
-                'max_discount'   => 50000,
-                'max_use'        => 500,
-                'used_count'     => 12,
-                'valid_from'     => now()->subDays(10),
-                'valid_until'    => now()->addMonths(6),
-                'is_active'      => true,
+                'min_purchase' => 200000,
+                'max_discount' => 50000,
+                'max_use' => 500,
+                'used_count' => 12,
+                'valid_from' => now()->subDays(10),
+                'valid_until' => now()->addMonths(6),
+                'is_active' => true,
             ],
             [
-                'code'           => 'KONSER20',
-                'discount_type'  => 'percentage',
+                'code' => 'KONSER20',
+                'discount_type' => 'percentage',
                 'discount_value' => 20,
-                'min_purchase'   => 300000,
-                'max_discount'   => 100000,
-                'max_use'        => 300,
-                'used_count'     => 45,
-                'valid_from'     => now()->subDays(5),
-                'valid_until'    => now()->addMonths(6),
-                'is_active'      => true,
+                'min_purchase' => 300000,
+                'max_discount' => 100000,
+                'max_use' => 300,
+                'used_count' => 45,
+                'valid_from' => now()->subDays(5),
+                'valid_until' => now()->addMonths(6),
+                'is_active' => true,
             ],
             [
-                'code'           => 'HEMAT10',
-                'discount_type'  => 'percentage',
+                'code' => 'HEMAT10',
+                'discount_type' => 'percentage',
                 'discount_value' => 10,
-                'min_purchase'   => 100000,
-                'max_discount'   => 50000,
-                'max_use'        => 1000,
-                'used_count'     => 120,
-                'valid_from'     => now()->subDays(30),
-                'valid_until'    => now()->addMonths(6),
-                'is_active'      => true,
+                'min_purchase' => 100000,
+                'max_discount' => 50000,
+                'max_use' => 1000,
+                'used_count' => 120,
+                'valid_from' => now()->subDays(30),
+                'valid_until' => now()->addMonths(6),
+                'is_active' => true,
             ],
         ];
 

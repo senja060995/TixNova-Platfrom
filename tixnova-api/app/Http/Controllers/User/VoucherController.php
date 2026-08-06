@@ -15,7 +15,7 @@ class VoucherController extends Controller
     public function apply(Request $request): JsonResponse
     {
         $request->validate([
-            'code'     => 'required|string',
+            'code' => 'required|string',
             'subtotal' => 'required|numeric|min:0',
         ]);
 
@@ -40,7 +40,7 @@ class VoucherController extends Controller
         if ($voucher->min_purchase && $subtotal < $voucher->min_purchase) {
             return response()->json([
                 'success' => false,
-                'message' => 'Minimal pembelian untuk voucher ini adalah Rp ' . number_format($voucher->min_purchase, 0, ',', '.'),
+                'message' => 'Minimal pembelian untuk voucher ini adalah Rp '.number_format($voucher->min_purchase, 0, ',', '.'),
             ], 422);
         }
 
@@ -49,11 +49,11 @@ class VoucherController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Voucher berhasil diterapkan!',
-            'data'    => [
-                'voucher_id'     => $voucher->id,
-                'code'           => $voucher->code,
-                'discount'       => $discount,
-                'discount_type'  => $voucher->discount_type,
+            'data' => [
+                'voucher_id' => $voucher->id,
+                'code' => $voucher->code,
+                'discount' => $discount,
+                'discount_type' => $voucher->discount_type,
                 'discount_value' => $voucher->discount_value,
             ],
         ]);

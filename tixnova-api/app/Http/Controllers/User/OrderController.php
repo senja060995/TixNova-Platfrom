@@ -3,254 +3,120 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
+use App\Http\Requests\Order\CreateOrderRequest;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Payment;
-use App\Models\Ticket;
+use App\Services\CheckoutService;
+use App\Services\InventoryReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    /**
-     * POST /api/orders — Buat order baru
-     */
-    public function store(Request $request): JsonResponse
+    public function __construct(
+        private CheckoutService $checkout,
+        private InventoryReservationService $inventory,
+    ) {}
+
+    public function store(CreateOrderRequest $request): JsonResponse
     {
-        $request->validate([
-            'event_id'      => 'required|exists:events,id',
-            'buyer_name'    => 'required|string|max:255',
-            'buyer_email'   => 'required|email|max:255',
-            'buyer_phone'   => 'required|string|max:20',
-            'items'         => 'required|array|min:1',
-            'items.*.ticket_id' => 'required|exists:tickets,id',
-            'items.*.quantity'  => 'required|integer|min:1|max:10',
-            'payment_method'    => 'nullable|string',
-        ]);
-
-        $event = Event::withoutGlobalScopes()->findOrFail($request->event_id);
-
-        DB::beginTransaction();
-        try {
-            $subtotal = 0;
-            $itemsToCreate = [];
-
-            foreach ($request->items as $itemData) {
-                $ticket = Ticket::where('event_id', $event->id)->findOrFail($itemData['ticket_id']);
-                $qty = (int) $itemData['quantity'];
-
-                // Check quota
-                if (($ticket->quota - $ticket->sold) < $qty) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Kuota tiket '{$ticket->name}' tidak mencukupi.",
-                    ], 422);
-                }
-
-                $itemSubtotal = $ticket->price * $qty;
-                $subtotal += $itemSubtotal;
-
-                // Prepare attendees
-                $attendees = $itemData['attendees'] ?? [];
-
-                for ($i = 0; $i < $qty; $i++) {
-                  $att = $attendees[$i] ?? [
-                      'name'  => $request->buyer_name,
-                      'email' => $request->buyer_email,
-                      'phone' => $request->buyer_phone,
-                  ];
-
-                  $itemsToCreate[] = [
-                      'ticket_id'      => $ticket->id,
-                      'quantity'       => 1,
-                      'price'          => $ticket->price,
-                      'attendee_name'  => $att['name'] ?? $request->buyer_name,
-                      'attendee_email' => $att['email'] ?? $request->buyer_email,
-                      'attendee_phone' => $att['phone'] ?? $request->buyer_phone,
-                      'qr_code'        => 'QR-' . strtoupper(\Str::random(12)),
-                  ];
-                }
-
-                // Increment ticket sold count
-                $ticket->increment('sold', $qty);
-            }
-
-            $discount = 0;
-            $voucherId = null;
-
-            if ($request->filled('voucher_code')) {
-                $voucher = \App\Models\Voucher::where('code', strtoupper(trim($request->voucher_code)))->first();
-                if ($voucher && $voucher->isValid()) {
-                    $discount = $voucher->calculateDiscount($subtotal);
-                    $voucherId = $voucher->id;
-                    $voucher->increment('used_count');
-                }
-            }
-
-            $adminFee = 5000; // Flat admin fee Rp 5.000
-            $total = max(0, $subtotal + $adminFee - $discount);
-
-            $userId = auth('sanctum')->id();
-
-            $order = Order::create([
-                'user_id'        => $userId ?: 1, // Fallback for guest checkout
-                'event_id'       => $event->id,
-                'tenant_id'      => $event->tenant_id,
-                'voucher_id'     => $voucherId,
-                'subtotal'       => $subtotal,
-                'admin_fee'      => $adminFee,
-                'discount'       => $discount,
-                'total'          => $total,
-                'status'         => 'pending',
-                'buyer_name'     => $request->buyer_name,
-                'buyer_email'    => $request->buyer_email,
-                'buyer_phone'    => $request->buyer_phone,
-                'expired_at'     => now()->addHours(2),
-            ]);
-
-            foreach ($itemsToCreate as $itemData) {
-                $order->items()->create($itemData);
-            }
-
-            // Create initial payment record
-            $method = $request->payment_method ?? 'qris';
-            Payment::create([
-                'order_id'    => $order->id,
-                'method'      => in_array($method, ['qris', 'bank_transfer', 'ewallet', 'credit_card', 'va']) ? $method : 'qris',
-                'provider'    => 'manual',
-                'external_id' => 'PAY-' . $order->order_code,
-                'amount'      => $total,
-                'status'      => 'pending',
-                'expired_at'  => $order->expired_at,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order berhasil dibuat.',
-                'data'    => $order->load(['event', 'items.ticket', 'payment']),
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat order: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * GET /api/orders/{code} — Detail order
-     */
-    public function show(string $code): JsonResponse
-    {
-        $order = Order::withoutGlobalScopes()
-            ->with(['event', 'items.ticket', 'payment'])
-            ->where('order_code', $code)
-            ->firstOrFail();
+        $order = $this->checkout->create($request->user(), $request->validated());
 
         return response()->json([
             'success' => true,
-            'data'    => $order,
+            'message' => 'Order berhasil dibuat. Lanjutkan pembayaran untuk mengamankan tiket.',
+            'data' => $this->orderData($order, false),
+        ], 201);
+    }
+
+    public function show(Request $request, string $code): JsonResponse
+    {
+        $order = $this->ownedOrder($request, $code)->load(['event', 'items.ticket', 'items.seat', 'payment']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->orderData($order, $order->isPaid()),
         ]);
     }
 
-    /**
-     * POST /api/orders/{code}/pay-simulation — Simulasi Pembayaran Instan (Sandbox / Demo)
-     */
-    public function paySimulation(string $code): JsonResponse
+    public function cancel(Request $request, string $code): JsonResponse
     {
-        $order = Order::withoutGlobalScopes()
-            ->with(['items.ticket', 'payment'])
-            ->where('order_code', $code)
-            ->firstOrFail();
+        DB::transaction(function () use ($request, $code) {
+            $order = $this->ownedOrder($request, $code, true)->load('items');
 
-        if ($order->status === 'paid') {
-            return response()->json([
-                'success' => true,
-                'message' => 'Order sudah dibayar sebelumnya.',
-                'data'    => $order,
-            ]);
-        }
-
-        DB::beginTransaction();
-        try {
-            $order->update([
-                'status'  => 'paid',
-                'paid_at' => now(),
-            ]);
-
-            if ($order->payment) {
-                $order->payment->update([
-                    'status'  => 'success',
-                    'paid_at' => now(),
-                ]);
+            if ($order->status !== 'pending') {
+                abort(422, 'Hanya order pending yang dapat dibatalkan.');
             }
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran berhasil dikonfirmasi! E-tiket telah terbit.',
-                'data'    => $order->fresh(['event', 'items.ticket', 'payment']),
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengonfirmasi pembayaran: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * POST /api/orders/{code}/cancel — Batalkan Order
-     */
-    public function cancel(string $code): JsonResponse
-    {
-        $order = Order::withoutGlobalScopes()
-            ->with('items')
-            ->where('order_code', $code)
-            ->firstOrFail();
-
-        if ($order->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya order dengan status pending yang dapat dibatalkan.',
-            ], 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            // Restore ticket sold quota
-            foreach ($order->items as $item) {
-                Ticket::where('id', $item->ticket_id)->decrement('sold', 1);
-            }
-
+            $this->inventory->release($order);
             $order->update([
-                'status'       => 'cancelled',
+                'status' => 'cancelled',
                 'cancelled_at' => now(),
             ]);
+            Payment::where('order_id', $order->id)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->update(['status' => 'failed']);
+        });
 
-            if ($order->payment) {
-                $order->payment->update(['status' => 'failed']);
-            }
+        return response()->json([
+            'success' => true,
+            'message' => 'Order berhasil dibatalkan.',
+        ]);
+    }
 
-            DB::commit();
+    private function ownedOrder(Request $request, string $code, bool $lock = false): Order
+    {
+        $query = Order::withoutGlobalScopes()
+            ->where('order_code', $code)
+            ->where('user_id', $request->user()->id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Order berhasil dibatalkan.',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membatalkan order: ' . $e->getMessage(),
-            ], 500);
+        if ($lock) {
+            $query->lockForUpdate();
         }
+
+        return $query->firstOrFail();
+    }
+
+    private function orderData(Order $order, bool $includeQr): array
+    {
+        return [
+            'order_code' => $order->order_code,
+            'status' => $order->status,
+            'subtotal' => (float) $order->subtotal,
+            'admin_fee' => (float) $order->admin_fee,
+            'discount' => (float) $order->discount,
+            'total' => (float) $order->total,
+            'expired_at' => $order->expired_at?->toIso8601String(),
+            'paid_at' => $order->paid_at?->toIso8601String(),
+            'buyer_name' => $order->buyer_name,
+            'buyer_email' => $order->buyer_email,
+            'buyer_phone' => $order->buyer_phone,
+            'event' => [
+                'title' => $order->event->title,
+                'venue' => $order->event->venue,
+                'city' => $order->event->city,
+                'start_date' => $order->event->start_date?->toIso8601String(),
+                'banner' => $order->event->banner,
+            ],
+            'items' => $order->items->map(fn ($item) => array_filter([
+                'id' => $item->id,
+                'ticket' => [
+                    'name' => $item->ticket->name,
+                    'type' => $item->ticket->type,
+                    'price' => (float) $item->ticket->price,
+                ],
+                'attendee_name' => $item->attendee_name,
+                'attendee_email' => $item->attendee_email,
+                'seat_label' => $item->seat?->label ?? $item->seat_number,
+                'qr_code' => $includeQr ? $item->qr_code : null,
+            ], fn ($value) => $value !== null))->values(),
+            'payment' => $order->payment ? [
+                'method' => $order->payment->method,
+                'status' => $order->payment->status,
+                'payment_url' => $order->payment->payment_url,
+            ] : null,
+        ];
     }
 }

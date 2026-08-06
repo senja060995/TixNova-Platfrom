@@ -10,16 +10,19 @@ class Ticket extends Model
 {
     protected $fillable = [
         'event_id', 'name', 'type', 'description', 'price',
-        'quota', 'sold', 'min_purchase', 'max_purchase',
+        'early_bird_price', 'early_bird_quota', 'early_bird_end',
+        'quota', 'sold', 'reserved', 'min_purchase', 'max_purchase',
         'sale_start', 'sale_end', 'includes', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
-        'includes'   => 'array',
-        'price'      => 'decimal:2',
+        'includes' => 'array',
+        'price' => 'decimal:2',
+        'early_bird_price' => 'decimal:2',
+        'early_bird_end' => 'datetime',
         'sale_start' => 'datetime',
-        'sale_end'   => 'datetime',
-        'is_active'  => 'boolean',
+        'sale_end' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     // ─── Relations ────────────────────────────────────────────
@@ -34,11 +37,16 @@ class Ticket extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function seats(): HasMany
+    {
+        return $this->hasMany(Seat::class);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────
 
     public function getAvailableQuota(): int
     {
-        return $this->quota - $this->sold;
+        return $this->quota - $this->sold - $this->reserved;
     }
 
     public function isAvailable(): bool
@@ -46,6 +54,31 @@ class Ticket extends Model
         return $this->is_active
             && $this->getAvailableQuota() > 0
             && (is_null($this->sale_start) || now()->gte($this->sale_start))
-            && (is_null($this->sale_end)   || now()->lte($this->sale_end));
+            && (is_null($this->sale_end) || now()->lte($this->sale_end));
+    }
+
+    public function earlyBirdActive(): bool
+    {
+        if (is_null($this->early_bird_price)) {
+            return false;
+        }
+        if (! is_null($this->early_bird_end) && now()->gt($this->early_bird_end)) {
+            return false;
+        }
+        if (! is_null($this->early_bird_quota)
+            && ($this->sold + $this->reserved) >= $this->early_bird_quota) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function currentPrice(): float
+    {
+        if ($this->earlyBirdActive()) {
+            return (float) $this->early_bird_price;
+        }
+
+        return (float) $this->price;
     }
 }

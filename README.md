@@ -1,62 +1,60 @@
-<<<<<<< HEAD
-# 🎵 TixNova — Concert Ticketing SaaS Platform
+# 🎵 TixNova — AI-Powered Event Growth & Operating System
 
-> Platform ticketing konser berbasis SaaS multi-tenant  
-> **PT Ragam Manfaat Sinergi** — Versi 1.0.0  
-> Alamat: Jl. Teluk Betung Selatan No. 123, Bandar Lampung, Indonesia  
+> **The Event Growth Operating System** — Power the experience economy.
+> **PT Ragam Manfaat Sinergi** — Versi 2.0
+> Alamat: Jl. Teluk Betung Selatan No. 123, Bandar Lampung, Indonesia
 
 ## 🎯 Tentang TixNova
 
-TixNova adalah platform ticketing konserten yang dibangun dengan arsitektur multi-tenant menggunakan Laravel 12 untuk backend dan Next.js 14 untuk frontend. Platform ini dirancang untuk membantu promotor acara dalam mengelola penjualan tiket secara efisien, memberikan pengalaman yang mulus bagi pengguna untuk membeli tiket, dan memberi kontrol penuh kepada super admin untuk mengelola seluruh sistem.
+TixNova bukan sekadar platform ticketing. Ia adalah **sistem operasi pertumbuhan event (Event Growth OS)** — lapisan kepercayaan, data, dan kecerdasan yang menyatukan seluruh ekonomi event (EO, artis, sponsor, venue, vendor, komunitas, pembeli) dalam satu sistem multi-tenant.
+
+Visi 2036: **menjadi sistem operasi ekonomi event global.** Arah produk, arsitektur 6 lapis, dan roadmap 10 tahun tertuang dalam Master Blueprint.
 
 ### Fitur Utama:
-- **Multi-tenant System**: Setiap promotor memiliki data terisolasi dengan keamanan yang maksimal
-- **RBAC (Role-Based Access Control)**: Tiga level akses - Super Admin, Promotor, dan User
-- **Sistem Event Management**: Pembuatan, pengelolaan, dan pelacakan acara secara lengkap
-- **Checkout yang Aman**: Integrasi dengan payment gateway lokal (Midtrans, Xendit)
-- **QR Code Ticketing**: Tiket digital dengan kode QR untuk verifikasi cepat
-- **Sistem Referral**: Program referensi untuk mendorong pemasaran organik
-- **Dashboard Analitik**: Visualisasi data penjualan dan performa acara
-- **Notifikasi Real-time**: Email dan SMS untuk konfirmasi pembelian dan reminder acara
-- **Manajemen Pengembalian**: Sistem refund yang terstruktur dan transparan
-- **Laporan Keuangan**: Laporan pendapatan, komisi, dan transaksi Detail
-
+- **Multi-tenant System**: Setiap promotor/EO memiliki data terisolasi
+- **RBAC (Role-Based Access Control)**: Super Admin, Promotor, dan User
+- **Sistem Event Management**: Pembuatan, approval, pengelolaan, pelacakan acara
+- **Checkout yang Aman**: Integrasi payment gateway (Midtrans, Xendit) + webhook idempotent
+- **QR Code Ticketing**: Tiket digital + verifikasi scan cepat
+- **Sistem Referral & Affiliate**: Pemasaran organik berjejaring (fondasi Distribution OS)
+- **Refund & Reschedule**: Pengajuan, review, dan eksekusi terstruktur
+- **Multi-language**: Konten ID/EN
+- **Dashboard Analitik**: Pendapatan, tiket per kategori, komisi
 
 ## 📋 Dokumentasi
 
-Seluruh dokumentasi perencanaan produk tersedia di:
-
-- 📄 **[docs/PRODUCT_DOCUMENTATION.md](./docs/PRODUCT_DOCUMENTATION.md)** — Dokumentasi lengkap produk
-
-### Isi Dokumentasi:
-1. Overview Produk & Value Proposition
-2. Arsitektur Sistem (Laravel 12 + Next.js 14)
-3. Struktur Folder Project (Backend & Frontend)
-4. ERD Database Lengkap (12+ tabel + SQL Schema)
-5. API Endpoint List (60+ endpoint)
-6. System Flow (Checkout, QR Scan, Event Creation)
-7. UI/UX Design System (Dark Mode)
-8. Security Architecture (Multi-tenant, RBAC, Webhook)
-9. Infrastructure & DevOps (Docker, CI/CD)
-10. Best Practices & Scalability + Roadmap
+| Dokumen | Isi |
+|---|---|
+| **[docs/MASTER_BLUEPRINT.md](./docs/MASTER_BLUEPRINT.md)** | Blueprint 2.0 — visi 2036, arsitektur 6 lapis, strategi AI/data/platform, roadmap 30 hari–10 tahun |
+| **[docs/AUDIT_REPORT_2026-08-06.md](./docs/AUDIT_REPORT_2026-08-06.md)** | Audit komprehensif produk, arsitektur, keamanan, roadmap |
+| **[docs/PRODUCT_DOCUMENTATION.md](./docs/PRODUCT_DOCUMENTATION.md)** | Dokumentasi lengkap produk + roadmap pengembangan |
 
 ## 🚀 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Laravel 12 + Sanctum |
-| Frontend | Next.js 14 + Tailwind CSS |
-| Database | MySQL 8 / PostgreSQL 15 |
-| Cache | Redis 7 |
+| Backend | Laravel 13.8 + PHP 8.3 + Sanctum |
+| Frontend | Next.js 16 + React 19 + TypeScript + Tailwind CSS |
+| Database | MySQL 8 / SQLite (dev) |
+| Cache & Queue | Redis 7 |
 | Payment | Midtrans + Xendit |
-| Infrastructure | Docker + Nginx + GitHub Actions |
+| Infrastruktur | Docker Compose + GitHub Actions (CI) |
 
 ## 👥 Role
 
 - **Super Admin** — Owner platform
-- **Promotor** — Event organizer
+- **Promotor / EO** — Event organizer
 - **User** — Pembeli tiket
 
-=======
-# TixNova
->>>>>>> e6058579e2555fac08d870bcb6015e70304dad02
+## 🧭 Arah Produk (Blueprint 2.0)
+
+```
+CORE (Ticketing · Event Mgmt · Multi-tenant · Trust & Identity)
+   + GROWTH ENGINE (Distribution OS · Affiliate · Community · Campaign)
+   + OPERATING SYSTEM (Event ERP · CRM · Finance OS · Vendor/Crew)
+   + MARKETPLACES (Sponsor · Vendor · Venue · Talent · Creator)
+   + INTELLIGENCE (Analytics · AI Pricing · AI Marketing · AI Matching · AI Fraud)
+   + PLATFORM (API · SDK/Widget · White Label · Mobile+Wallet · POS)
+```
+
+Lihat `docs/MASTER_BLUEPRINT.md` untuk detail, prioritas, dan roadmap lengkap.
