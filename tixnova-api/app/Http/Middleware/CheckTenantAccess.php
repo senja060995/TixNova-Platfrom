@@ -35,9 +35,17 @@ class CheckTenantAccess
         // Promotor's tenant must be active
         if ($user->isPromotor() && $user->tenant) {
             if (! $user->tenant->isActive()) {
+                $status = $user->tenant->status;
+                $msg = match ($status) {
+                    'pending' => 'Mohon maaf, proses pendaftaran promotor Anda sedang diproses oleh pihak admin. Mohon ditunggu beberapa saat lagi, nanti akan diberitahukan lewat email setelah proses pendaftaran berhasil diaudit.',
+                    'suspended' => 'Mohon maaf, akun promotor Anda sedang dinonaktifkan/ditangguhkan oleh pihak admin.',
+                    'rejected' => 'Mohon maaf, pendaftaran promotor Anda tidak disetujui oleh admin.',
+                    default => 'Your tenant account is not active. Status: '.$status,
+                };
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your tenant account is not active. Status: '.$user->tenant->status,
+                    'message' => $msg,
                 ], 403);
             }
         }

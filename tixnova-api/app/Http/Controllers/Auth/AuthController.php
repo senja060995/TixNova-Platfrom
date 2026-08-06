@@ -87,7 +87,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pendaftaran promotor berhasil. Menunggu verifikasi admin.',
+                'message' => 'Mohon maaf, proses pendaftaran promotor Anda sedang diproses oleh pihak admin. Mohon ditunggu beberapa saat lagi, nanti akan diberitahukan lewat email setelah proses pendaftaran berhasil diaudit.',
                 'data' => [
                     'user' => $user,
                     'tenant' => $tenant,
@@ -122,6 +122,25 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Akun Anda tidak aktif. Hubungi administrator.',
             ], 403);
+        }
+
+        // Promotor Tenant Status Check
+        if ($user->hasRole('promotor') || $user->tenant_id) {
+            $tenant = $user->tenant;
+            if ($tenant && ! $tenant->isActive()) {
+                $status = $tenant->status;
+                $msg = match ($status) {
+                    'pending' => 'Mohon maaf, proses pendaftaran promotor Anda sedang diproses oleh pihak admin. Mohon ditunggu beberapa saat lagi, nanti akan diberitahukan lewat email setelah proses pendaftaran berhasil diaudit.',
+                    'suspended' => 'Mohon maaf, akun promotor Anda sedang dinonaktifkan/ditangguhkan oleh pihak admin.',
+                    'rejected' => 'Mohon maaf, pendaftaran promotor Anda tidak disetujui oleh admin.',
+                    default => 'Akun promotor Anda tidak aktif.',
+                };
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                ], 403);
+            }
         }
 
         // Update last login
