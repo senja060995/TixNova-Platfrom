@@ -11,6 +11,15 @@ class RegisterPromotorRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('organization_name') && $this->has('tenant_name')) {
+            $this->merge([
+                'organization_name' => $this->input('tenant_name'),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -18,7 +27,7 @@ class RegisterPromotorRequest extends FormRequest
             'organization_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'phone' => ['required', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
         ];
     }
 

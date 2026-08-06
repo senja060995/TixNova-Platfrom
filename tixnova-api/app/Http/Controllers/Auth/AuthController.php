@@ -39,6 +39,7 @@ class AuthController extends Controller
 
         $referral = $this->referrals->attach($request->referral_code, $user);
         $user->update(['referred_by' => $referral?->user_id]);
+        \Spatie\Permission\Models\Role::findOrCreate('user');
         $user->assignRole('user');
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -79,6 +80,7 @@ class AuthController extends Controller
                 'referral_code' => strtoupper(Str::random(8)),
             ]);
 
+            \Spatie\Permission\Models\Role::findOrCreate('promotor');
             $user->assignRole('promotor');
 
             DB::commit();
