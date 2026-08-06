@@ -37,8 +37,36 @@ class User extends Authenticatable
             'birth_date' => 'date',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'phone' => 'encrypted',
         ];
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        if (blank($value)) {
+            return $value;
+        }
+
+        try {
+            return decrypt($value);
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    public function setPhoneAttribute($value)
+    {
+        if (blank($value)) {
+            $this->attributes['phone'] = $value;
+
+            return;
+        }
+
+        try {
+            decrypt($value);
+            $this->attributes['phone'] = $value;
+        } catch (\Throwable) {
+            $this->attributes['phone'] = encrypt($value);
+        }
     }
 
     // ─── Relations ────────────────────────────────────────────
