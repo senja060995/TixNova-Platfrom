@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #7C3AED;
+  --color-primary-dark: #5B21B6;
+  --color-accent: #F59E0B;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+
+  --color-bg-base: #0F0F17;
+  --color-bg-surface: #1A1A2E;
+  --color-bg-elevated: #252540;
+  --color-bg-border: #2D2D4E;
+
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #475569;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Tailwind component and utility classes */
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-primary to-primary-dark transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-lg font-medium text-white bg-bg-elevated border border-bg-border transition-all duration-200 hover:bg-bg-border hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-outline {
+    @apply px-6 py-3 rounded-lg font-medium text-primary border-2 border-primary transition-all duration-200 hover:bg-primary/10 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply px-6 py-3 rounded-lg font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply px-6 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-danger to-red-600 transition-all duration-200 hover:shadow-lg hover:shadow-danger/30 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg bg-bg-surface border border-bg-border text-text-primary placeholder-text-muted transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+  }
+
+  .card {
+    @apply bg-bg-surface rounded-xl border border-bg-border p-6 transition-all duration-200 hover:border-primary/30;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.01];
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary;
+  }
+
+  .badge-secondary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-elevated text-text-secondary border border-bg-border;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success border border-success/30;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/20 text-warning border border-warning/30;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger/20 text-danger border border-danger/30;
+  }
+
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info border border-info/30;
+  }
+
+  .section {
+    @apply py-16 sm:py-24;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 350px;
+  }
+
+  .container-main {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Glassmorphism - Optimized for GPU compositing and smooth scrolling */
+  .glass {
+    background: rgba(26, 26, 46, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(45, 45, 78, 0.6);
+    transform: translateZ(0);
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-accent;
+  }
+}
+
+/* Animations - GPU hardware accelerated */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.85;
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.25);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.45);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+  will-change: transform, opacity;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s infinite ease-in-out;
+  will-change: box-shadow, opacity;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
