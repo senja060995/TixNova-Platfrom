@@ -93,7 +93,7 @@ class ApiPlatformController extends Controller
     {
         $subscriptions = WebhookSubscription::query()
             ->withCount('deliveries')
-            ->withSum('deliveries as failed_deliveries', 'response_code')
+            ->withCount(['deliveries as failed_deliveries' => fn ($q) => $q->where('status', WebhookDelivery::STATUS_FAILED)])
             ->orderByDesc('id')
             ->get()
             ->map(fn (WebhookSubscription $sub) => [

@@ -32,6 +32,6 @@ class WebhookDelivery extends Model
 
     public function subscription(): BelongsTo
     {
-        return $this->belongsTo(WebhookSubscription::class);
+        return $this->belongsTo(WebhookSubscription::class, 'subscription_id');
     }
 }

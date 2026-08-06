@@ -51,6 +51,28 @@ class ApiPlatformTest extends TestCase
         $this->assertFalse($key->fresh()->is_active);
     }
 
+    public function test_promotor_can_fetch_webhooks_and_deliveries(): void
+    {
+        [$tenant, $promotor, $category] = $this->context('wh-fetch');
+
+        $sub = WebhookSubscription::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'My Webhook',
+            'event_type' => 'order.paid',
+            'target_url' => 'https://example.com/webhook',
+            'signing_secret' => 'secret123',
+        ]);
+
+        $this->actingAs($promotor, 'sanctum')
+            ->getJson('/api/promotor/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.subscriptions.0.id', $sub->id);
+
+        $this->actingAs($promotor, 'sanctum')
+            ->getJson('/api/promotor/webhooks/deliveries')
+            ->assertOk();
+    }
+
     public function test_public_api_lists_and_serves_only_own_tenant_events(): void
     {
         [$tenant, $promotor, $category] = $this->context('pub-a');
