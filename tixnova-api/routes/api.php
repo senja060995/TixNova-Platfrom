@@ -143,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('webhooks')->group(function () {
     Route::post('/midtrans', [WebhookController::class, 'midtrans'])->middleware('throttle:webhooks');
     Route::post('/xendit', [WebhookController::class, 'xendit'])->middleware('throttle:webhooks');
+    Route::post('/stripe', [WebhookController::class, 'stripe'])->middleware('throttle:webhooks');
 });
 
 // ─── Super Admin ─────────────────────────────────────────────────────────────

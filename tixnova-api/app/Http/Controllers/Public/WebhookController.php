@@ -274,6 +274,233 @@ class WebhookController extends Controller
         return response()->json(['status' => 'OK']);
     }
 
+    public function stripe(Request $request): JsonResponse
+    {
+        $webhookSecret = config('services.stripe.webhook_secret');
+        $signature = $request->header('Stripe-Signature');
+
+        if (blank($webhookSecret) || blank($signature)) {
+            return response()->json(['message' => 'Invalid signature.'], 403);
+        }
+
+        $event = $this->verifyStripeSignature($signature, (string) $request->getContent(), $webhookSecret);
+
+        if (! $event) {
+            return response()->json(['message' => 'Invalid signature.'], 403);
+        }
+
+        $type = $event['type'] ?? '';
+        $object = $event['data']['object'] ?? [];
+        $eventKey = hash('sha256', ($event['id'] ?? '').'|'.$type);
+
+        if (PaymentWebhookEvent::where('event_key', $eventKey)->exists()) {
+            return response()->json(['status' => 'OK']);
+        }
+
+        if ($type === 'checkout.session.completed') {
+            $orderCode = $object['client_reference_id'] ?? data_get($object, 'metadata.order_code');
+
+            DB::transaction(function () use ($orderCode, $object, $eventKey, $type) {
+                $payment = $this->findStripePayment($orderCode);
+
+                if (! $payment || ($object['payment_status'] ?? '') !== 'paid') {
+                    return;
+                }
+
+                PaymentWebhookEvent::create([
+                    'payment_id' => $payment->id,
+                    'provider' => 'stripe',
+                    'event_key' => $eventKey,
+                    'transaction_status' => $type,
+                    'received_at' => now(),
+                ]);
+
+                $order = Order::withoutGlobalScopes()
+                    ->whereKey($payment->order_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->load('items');
+
+                if ($payment->status === 'success' || $order->status === 'paid') {
+                    return;
+                }
+
+                if ($order->status !== 'pending' || ! $order->expired_at || $order->expired_at->isPast()) {
+                    return;
+                }
+
+                $payment->update([
+                    'provider_transaction_id' => $object['payment_intent'] ?? $payment->provider_transaction_id,
+                    'provider_payment_type' => $this->stripePaymentType($object),
+                    'status' => 'success',
+                    'paid_at' => now(),
+                    'payload_raw' => $this->safeStripePayload($object),
+                ]);
+
+                $this->settleOrder($payment, $order);
+            });
+
+            return response()->json(['status' => 'OK']);
+        }
+
+        if ($type === 'checkout.session.expired') {
+            $orderCode = $object['client_reference_id'] ?? data_get($object, 'metadata.order_code');
+
+            DB::transaction(function () use ($orderCode, $eventKey, $type) {
+                $payment = $this->findStripePayment($orderCode);
+
+                if (! $payment) {
+                    return;
+                }
+
+                PaymentWebhookEvent::create([
+                    'payment_id' => $payment->id,
+                    'provider' => 'stripe',
+                    'event_key' => $eventKey,
+                    'transaction_status' => $type,
+                    'received_at' => now(),
+                ]);
+
+                $order = Order::withoutGlobalScopes()
+                    ->whereKey($payment->order_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->load('items');
+
+                if ($payment->status === 'success' || $order->status === 'paid' || $order->status !== 'pending') {
+                    return;
+                }
+
+                $this->inventory->release($order);
+                $payment->update(['status' => 'expired']);
+                $order->update(['status' => 'expired']);
+            });
+
+            return response()->json(['status' => 'OK']);
+        }
+
+        if ($type === 'charge.refunded') {
+            $paymentIntent = $object['payment_intent'] ?? null;
+
+            DB::transaction(function () use ($paymentIntent, $eventKey, $type) {
+                if (blank($paymentIntent)) {
+                    return;
+                }
+
+                $payment = Payment::where('provider', 'stripe')
+                    ->where('provider_transaction_id', $paymentIntent)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $payment) {
+                    return;
+                }
+
+                PaymentWebhookEvent::create([
+                    'payment_id' => $payment->id,
+                    'provider' => 'stripe',
+                    'event_key' => $eventKey,
+                    'transaction_status' => $type,
+                    'received_at' => now(),
+                ]);
+
+                $refund = Refund::where('payment_id', $payment->id)
+                    ->whereIn('status', ['processing', 'manual_required'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($refund) {
+                    app(RefundService::class)->confirm($refund);
+                }
+            });
+
+            return response()->json(['status' => 'OK']);
+        }
+
+        // Acknowledge any other event type (unsubscribe flow, etc.) as received.
+        return response()->json(['status' => 'OK']);
+    }
+
+    private function verifyStripeSignature(string $header, string $payload, string $secret): ?array
+    {
+        $parts = [];
+        foreach (explode(',', $header) as $part) {
+            [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
+            $parts[$key] = $value;
+        }
+
+        $timestamp = $parts['t'] ?? null;
+        $signature = $parts['v1'] ?? null;
+
+        if (blank($timestamp) || blank($signature) || abs((int) $timestamp - now()->timestamp) > 300) {
+            return null;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp.'.'.$payload, $secret);
+
+        if (! hash_equals($expected, $signature)) {
+            return null;
+        }
+
+        return json_decode($payload, true) ?: null;
+    }
+
+    private function findStripePayment(?string $orderCode): ?Payment
+    {
+        if (blank($orderCode)) {
+            return null;
+        }
+
+        return Payment::where('provider', 'stripe')
+            ->whereHas('order', fn ($q) => $q->where('order_code', $orderCode))
+            ->latest()
+            ->first();
+    }
+
+    private function stripePaymentType(array $object): ?string
+    {
+        if (filled($object['payment_method'] ?? null)) {
+            return (string) $object['payment_method'];
+        }
+
+        $types = $object['payment_method_types'] ?? [];
+
+        return is_array($types) && filled($types) ? (string) reset($types) : null;
+    }
+
+    private function safeStripePayload(array $object): array
+    {
+        return [
+            'id' => $object['id'] ?? null,
+            'client_reference_id' => $object['client_reference_id'] ?? null,
+            'status' => $object['status'] ?? null,
+            'payment_status' => $object['payment_status'] ?? null,
+            'payment_intent' => $object['payment_intent'] ?? null,
+            'payment_method' => $this->stripePaymentType($object),
+            'amount_total' => $object['amount_total'] ?? null,
+            'currency' => $object['currency'] ?? null,
+        ];
+    }
+
+    private function settleOrder(Payment $payment, Order $order): void
+    {
+        $this->inventory->convertToSold($order);
+        $order->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        $this->referrals->rewardPaidOrder($order);
+        SendEticket::dispatch($order->id)->afterCommit();
+
+        if ($order->voucher_id) {
+            Voucher::withoutGlobalScopes()
+                ->whereKey($order->voucher_id)
+                ->lockForUpdate()
+                ->increment('used_count');
+        }
+    }
+
     private function paymentStatus(string $transactionStatus, ?string $fraudStatus): string
     {
         return match ($transactionStatus) {

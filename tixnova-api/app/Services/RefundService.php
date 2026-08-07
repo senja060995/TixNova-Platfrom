@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\User;
 use App\Services\Payments\MidtransGateway;
+use App\Services\Payments\StripeGateway;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -16,6 +17,7 @@ class RefundService
         private InventoryReservationService $inventory,
         private ReferralService $referrals,
         private MidtransGateway $midtrans,
+        private StripeGateway $stripe,
     ) {}
 
     public function request(Order $order, User $buyer, array $data): Refund
@@ -93,7 +95,10 @@ class RefundService
                 return $refund->fresh();
             }
 
-            $response = $this->midtrans->refund($refund->payment, $refund);
+            $response = match ($refund->payment->provider) {
+                'stripe' => $this->stripe->refund($refund->payment, $refund),
+                default => $this->midtrans->refund($refund->payment, $refund),
+            };
             $refund->update([
                 'provider_refund_id' => $response['refund_key'] ?? $response['refund_id'] ?? $refund->provider_refund_key,
                 'provider_response' => $this->safeProviderResponse($response),
@@ -154,6 +159,10 @@ class RefundService
 
     private function supportsAutomaticRefund(Payment $payment): bool
     {
+        if ($payment->provider === 'stripe') {
+            return filled($payment->provider_transaction_id);
+        }
+
         return $payment->provider === 'midtrans'
             && filled($payment->provider_transaction_id)
             && in_array($payment->provider_payment_type, config('services.midtrans.automatic_refund_payment_types'), true);

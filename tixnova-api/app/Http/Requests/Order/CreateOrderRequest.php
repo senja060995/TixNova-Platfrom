@@ -28,7 +28,7 @@ class CreateOrderRequest extends FormRequest
             'referral_code' => ['nullable', 'string', 'max:20'],
             'community_code' => ['nullable', 'string', 'max:12'],
             'source' => ['nullable', 'string', 'max:40'],
-            'payment_method' => ['required', 'in:bank_transfer,ewallet,qris,credit_card,va'],
+            'payment_method' => ['required', 'in:bank_transfer,ewallet,qris,credit_card,va,stripe'],
             'buyer_name' => ['required', 'string', 'max:255'],
             'buyer_email' => ['required', 'email', 'max:255'],
             'buyer_phone' => ['required', 'string', 'max:20'],

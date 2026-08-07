@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Voucher;
 use App\Services\InventoryReservationService;
 use App\Services\Payments\MidtransGateway;
+use App\Services\Payments\StripeGateway;
 use App\Services\Payments\XenditGateway;
 use App\Services\ReferralService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class PaymentController extends Controller
     public function __construct(
         private MidtransGateway $midtrans,
         private XenditGateway $xendit,
+        private StripeGateway $stripe,
         private InventoryReservationService $inventory,
         private ReferralService $referrals,
     ) {}
@@ -74,6 +76,7 @@ class PaymentController extends Controller
 
             $response = match ($payment->provider) {
                 'xendit' => $this->xendit->createInvoice($order, $payment),
+                'stripe' => $this->stripe->createCheckoutSession($order, $payment),
                 default => $this->midtrans->createTransaction($order, $payment),
             };
 
@@ -105,6 +108,8 @@ class PaymentController extends Controller
             'token' => $response['token'] ?? null,
             'redirect_url' => $response['redirect_url'] ?? null,
             'invoice_url' => $response['invoice_url'] ?? null,
+            'url' => $response['url'] ?? null,
+            'id' => $response['id'] ?? null,
             'external_id' => $response['id'] ?? null,
             'status' => $response['status'] ?? null,
         ];
@@ -118,43 +123,24 @@ class PaymentController extends Controller
             ->with('payment')
             ->firstOrFail();
 
-        // Sync with Midtrans status if order is pending
-        if ($order->status === 'pending' && $order->payment && $order->payment->provider === 'midtrans') {
-            $statusData = $this->midtrans->getTransactionStatus($order->payment);
-            if ($statusData) {
-                $trxStatus = $statusData['transaction_status'] ?? null;
-                $fraudStatus = $statusData['fraud_status'] ?? null;
+        // Sync with provider status if order is pending
+        if ($order->status === 'pending' && $order->payment) {
+            $provider = $order->payment->provider;
 
-                if (in_array($trxStatus, ['settlement', 'capture'], true) && in_array($fraudStatus, ['accept', null, ''], true)) {
-                    DB::transaction(function () use ($order, $statusData) {
-                        $order->refresh();
-                        if ($order->status !== 'pending') {
-                            return;
-                        }
+            if ($provider === 'midtrans') {
+                $statusData = $this->midtrans->getTransactionStatus($order->payment);
+                if ($statusData) {
+                    $trxStatus = $statusData['transaction_status'] ?? null;
+                    $fraudStatus = $statusData['fraud_status'] ?? null;
 
-                        $this->inventory->convertToSold($order);
-                        $order->payment->update([
-                            'status' => 'success',
-                            'paid_at' => now(),
-                            'provider_transaction_id' => $statusData['transaction_id'] ?? $order->payment->provider_transaction_id,
-                        ]);
-                        $order->update([
-                            'status' => 'paid',
-                            'paid_at' => now(),
-                        ]);
-
-                        $this->referrals->rewardPaidOrder($order);
-                        SendEticket::dispatch($order->id)->afterCommit();
-
-                        if ($order->voucher_id) {
-                            Voucher::withoutGlobalScopes()
-                                ->whereKey($order->voucher_id)
-                                ->lockForUpdate()
-                                ->increment('used_count');
-                        }
-                    });
-
-                    $order->refresh();
+                    if (in_array($trxStatus, ['settlement', 'capture'], true) && in_array($fraudStatus, ['accept', null, ''], true)) {
+                        $this->settle($order, $statusData['transaction_id'] ?? null, $statusData['payment_type'] ?? null);
+                    }
+                }
+            } elseif ($provider === 'stripe') {
+                $statusData = $this->stripe->getCheckoutSessionStatus($order->payment);
+                if ($statusData && ($statusData['status'] ?? '') === 'complete' && ($statusData['payment_status'] ?? '') === 'paid') {
+                    $this->settle($order, $statusData['payment_intent'] ?? null, null);
                 }
             }
         }
@@ -172,5 +158,39 @@ class PaymentController extends Controller
                 ] : null,
             ],
         ]);
+    }
+
+    private function settle(Order $order, ?string $transactionId, ?string $paymentType): void
+    {
+        DB::transaction(function () use ($order, $transactionId, $paymentType) {
+            $order->refresh();
+            if ($order->status !== 'pending') {
+                return;
+            }
+
+            $this->inventory->convertToSold($order);
+            $order->payment->update([
+                'status' => 'success',
+                'paid_at' => now(),
+                'provider_transaction_id' => $transactionId ?: $order->payment->provider_transaction_id,
+                'provider_payment_type' => $paymentType ?: $order->payment->provider_payment_type,
+            ]);
+            $order->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            $this->referrals->rewardPaidOrder($order);
+            SendEticket::dispatch($order->id)->afterCommit();
+
+            if ($order->voucher_id) {
+                Voucher::withoutGlobalScopes()
+                    ->whereKey($order->voucher_id)
+                    ->lockForUpdate()
+                    ->increment('used_count');
+            }
+        });
+
+        $order->refresh();
     }
 }

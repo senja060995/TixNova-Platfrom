@@ -13,6 +13,7 @@ import {
   QrCode,
   Building2,
   Lock,
+  Wallet,
   ChevronLeft,
   ArrowRight,
   AlertCircle,
@@ -52,7 +53,8 @@ interface CartData {
 const PAYMENT_METHODS = [
   { id: "qris", name: "QRIS (GoPay, OVO, Dana, LinkAja)", icon: QrCode, desc: "Instan & Bebas Biaya Admin Tambahan" },
   { id: "bank_transfer", name: "Virtual Account (BCA / Mandiri / BNI / BRI)", icon: Building2, desc: "Verifikasi Otomatis 24 Jam" },
-  { id: "ewallet", name: "E-Wallet (GoPay, ShopeePay)", icon: CreditCard, desc: "Pembayaran Langsung via Aplikasi" },
+  { id: "ewallet", name: "E-Wallet (GoPay, ShopeePay)", icon: Wallet, desc: "Pembayaran Langsung via Aplikasi" },
+  { id: "stripe", name: "Kartu / GoPay / OVO / Dana / Link (Stripe)", icon: CreditCard, desc: "Pembayaran Aman & Internasional via Stripe" },
   { id: "credit_card", name: "Kartu Kredit / Debit", icon: Lock, desc: "Visa, Mastercard, JCB" },
 ];
 

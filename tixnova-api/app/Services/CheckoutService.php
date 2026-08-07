@@ -185,7 +185,7 @@ class CheckoutService
             Payment::create([
                 'order_id' => $order->id,
                 'method' => $data['payment_method'],
-                'provider' => 'midtrans',
+                'provider' => $data['payment_method'] === 'stripe' ? 'stripe' : 'midtrans',
                 'external_id' => $order->order_code.'-'.strtoupper(str()->random(8)),
                 'amount' => $total,
                 'status' => 'pending',

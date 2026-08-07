@@ -64,4 +64,12 @@ return [
         'frontend_url' => env('FRONTEND_URL'),
     ],
 
+    'stripe' => [
+        'secret_key' => env('STRIPE_SECRET_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'is_production' => env('STRIPE_IS_PRODUCTION', false),
+        'base_url' => 'https://api.stripe.com',
+        'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+    ],
+
 ];

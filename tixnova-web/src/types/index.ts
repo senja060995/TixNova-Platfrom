@@ -222,8 +222,8 @@ export interface OrderItem {
 export interface Payment {
   id: number;
   order_id: number;
-  method: "bank_transfer" | "ewallet" | "qris" | "credit_card" | "va";
-  provider: "midtrans" | "xendit" | "manual";
+  method: "bank_transfer" | "ewallet" | "qris" | "credit_card" | "va" | "stripe";
+  provider: "midtrans" | "xendit" | "manual" | "stripe";
   external_id?: string;
   payment_url?: string;
   amount: number;
