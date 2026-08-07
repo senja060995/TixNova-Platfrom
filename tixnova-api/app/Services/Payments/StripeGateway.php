@@ -21,9 +21,12 @@ class StripeGateway
         $frontendUrl = rtrim(config('services.stripe.frontend_url', 'http://localhost:3000'), '/');
         $paymentMethodTypes = config('services.stripe.payment_method_types', ['card', 'link']);
 
-        $expiresAt = $order->expired_at?->isFuture()
+        $orderExpiry = $order->expired_at?->isFuture()
             ? (int) $order->expired_at->timestamp
             : now()->addMinutes(15)->timestamp;
+
+        // Stripe requires expires_at >= 30 minutes from creation.
+        $expiresAt = (int) max($orderExpiry, now()->addMinutes(30)->timestamp);
 
         $response = $this->client()->asForm()->post('/v1/checkout/sessions', [
             'payment_method_types' => $paymentMethodTypes,
