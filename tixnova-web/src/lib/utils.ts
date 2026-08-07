@@ -18,6 +18,7 @@ export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOpt
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Jakarta",
     ...options,
   }).format(new Date(date));
 }
@@ -25,6 +26,7 @@ export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOpt
 export function formatDateOnly(date: string | Date): string {
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "full",
+    timeZone: "Asia/Jakarta",
   }).format(new Date(date));
 }
 

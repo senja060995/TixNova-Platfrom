@@ -216,6 +216,7 @@ export const publicApi = {
     show: (slug: string) => api.getClient().get(`/communities/${slug}`),
     join: (slug: string) => api.getClient().post(`/communities/${slug}/join`),
     leave: (slug: string) => api.getClient().post(`/communities/${slug}/leave`),
+    mine: () => api.getClient().get("/me/communities"),
     summary: (slug: string) => api.getClient().get(`/promotor/communities/${slug}/summary`),
   },
 };

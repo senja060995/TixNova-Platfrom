@@ -93,6 +93,9 @@ export default function SuperAdminEventApprovalsPage() {
                   src={event.banner || "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800"}
                   alt={event.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800";
+                  }}
                 />
               </div>
 

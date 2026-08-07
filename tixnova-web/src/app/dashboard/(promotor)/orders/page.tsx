@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  ShoppingBag, Search, Eye, Download, RefreshCw, Filter
+  ShoppingBag, Search, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -38,36 +38,30 @@ export default function PromotorOrdersPage() {
   const [eventFilter, setEventFilter] = useState("all");
   const [events, setEvents] = useState<Array<{ id: number; title: string }>>([]);
 
-  const fetchOrders = () => {
+  const fetchOrders = useCallback(() => {
     setLoading(true);
     const params: Record<string, unknown> = {};
     if (search) params.search = search;
     if (statusFilter !== "all") params.status = statusFilter;
     if (eventFilter !== "all") params.event_id = eventFilter;
 
-    // Coba ambil dari event pertama sebagai contoh (idealnya ada route /promotor/orders)
-    api.getClient().get("/promotor/events")
-      .then((res) => {
-        const evList = res.data?.data?.data || [];
+    Promise.all([
+      api.getClient().get("/promotor/events"),
+      api.getClient().get("/promotor/orders", { params }),
+    ])
+      .then(([eventsRes, ordersRes]) => {
+        const evList = eventsRes.data?.data?.data || [];
         setEvents(evList);
-        if (evList.length > 0) {
-          const evId = eventFilter !== "all" ? eventFilter : evList[0]?.id;
-          return api.getClient().get(`/promotor/events/${evId}/orders`, { params });
-        }
-        return null;
-      })
-      .then((res) => {
-        if (res) setOrders(res.data?.data?.data || res.data?.data || []);
+        setOrders(ordersRes.data?.data?.data || ordersRes.data?.data || []);
       })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  };
+  }, [search, statusFilter, eventFilter]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchOrders();
-  }, [statusFilter, eventFilter]);
+    const frame = requestAnimationFrame(fetchOrders);
+    return () => cancelAnimationFrame(frame);
+  }, [fetchOrders]);
 
   const totals = {
     all: orders.length,

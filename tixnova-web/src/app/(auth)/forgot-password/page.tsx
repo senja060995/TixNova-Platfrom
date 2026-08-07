@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft, Send } from "lucide-react";
+import { ChevronLeft, Mail, ArrowLeft, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authApi } from "@/lib/api";
@@ -37,6 +37,14 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6 bg-bg-surface p-8 rounded-3xl border border-bg-border shadow-2xl relative overflow-hidden">
+        {/* Back to home */}
+        <Link
+          href="/"
+          className="absolute top-6 left-6 z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
+        </Link>
+
         <div className="text-center relative">
           <Link href="/" className="inline-flex items-center gap-2 text-2xl font-black tracking-tight text-white mb-4">
             <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-lg">

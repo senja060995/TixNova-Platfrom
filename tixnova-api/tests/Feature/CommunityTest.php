@@ -289,6 +289,108 @@ class CommunityTest extends TestCase
         ]);
     }
 
+    public function test_promotor_can_get_community_members(): void
+    {
+        [$tenant, , $promotor] = $this->context();
+        Role::findOrCreate('promotor');
+        $promotor->assignRole('promotor');
+
+        $community = Community::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Komunitas',
+            'slug' => 'komunitas-'.str()->lower(str()->random(6)),
+            'code' => 'COMMUNITY',
+            'type' => 'komunitas',
+            'status' => 'active',
+        ]);
+
+        $buyer = User::factory()->create();
+        CommunityMember::create([
+            'community_id' => $community->id,
+            'user_id' => $buyer->id,
+            'role' => 'member',
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($promotor, 'sanctum')
+            ->getJson("/api/promotor/communities/{$community->slug}/members");
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data.data');
+        $response->assertJsonPath('data.data.0.user_id', $buyer->id);
+    }
+
+    public function test_user_can_list_their_communities(): void
+    {
+        [$tenant, , $promotor] = $this->context();
+        $buyer = User::factory()->create();
+
+        $joined = Community::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Joined',
+            'slug' => 'joined-'.str()->lower(str()->random(6)),
+            'code' => 'JOINED',
+            'type' => 'komunitas',
+            'status' => 'active',
+        ]);
+
+        $other = Community::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Other',
+            'slug' => 'other-'.str()->lower(str()->random(6)),
+            'code' => 'OTHER',
+            'type' => 'komunitas',
+            'status' => 'active',
+        ]);
+
+        CommunityMember::create([
+            'community_id' => $joined->id,
+            'user_id' => $buyer->id,
+            'role' => 'member',
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($buyer, 'sanctum')
+            ->getJson('/api/me/communities');
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.id', $joined->id);
+        $response->assertJsonMissing(['id' => $other->id]);
+    }
+
+    public function test_show_includes_is_member_for_authenticated_user(): void
+    {
+        [$tenant, , $promotor] = $this->context();
+        $buyer = User::factory()->create();
+
+        $community = Community::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Komunitas',
+            'slug' => 'komunitas-'.str()->lower(str()->random(6)),
+            'code' => 'COMMUNITY',
+            'type' => 'komunitas',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($buyer, 'sanctum')
+            ->getJson("/api/communities/{$community->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.is_member', false);
+
+        CommunityMember::create([
+            'community_id' => $community->id,
+            'user_id' => $buyer->id,
+            'role' => 'member',
+            'joined_at' => now(),
+        ]);
+
+        $this->actingAs($buyer, 'sanctum')
+            ->getJson("/api/communities/{$community->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.is_member', true);
+    }
+
     public function test_foreign_community_cannot_be_accessed_by_promotor(): void
     {
         [$tenant, , $promotor] = $this->context();

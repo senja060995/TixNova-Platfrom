@@ -145,7 +145,7 @@ class SampleEventSeeder extends Seeder
                 'end_date' => Carbon::now()->addDays(55)->addHours(3),
                 'is_featured' => true,
                 'category_id' => $musicCat?->id,
-                'banner' => 'https://images.unsplash.com/photo-1540835296355-32c3a4d4b397?w=1200',
+                'banner' => 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1200',
                 'tickets' => [
                     ['name' => 'D Zone',  'type' => 'regular', 'price' => 1800000, 'quota' => 3000],
                     ['name' => 'C Zone',  'type' => 'regular', 'price' => 2500000, 'quota' => 2000],

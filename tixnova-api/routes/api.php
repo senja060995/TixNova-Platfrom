@@ -10,6 +10,7 @@ use App\Http\Controllers\Promotor\DashboardController as PromotorDashboardContro
 use App\Http\Controllers\Promotor\ErpController as PromotorErpController;
 use App\Http\Controllers\Promotor\EventController as PromotorEventController;
 use App\Http\Controllers\Promotor\InsightController as PromotorInsightController;
+use App\Http\Controllers\Promotor\OrderController as PromotorOrderController;
 use App\Http\Controllers\Promotor\PricingController as PromotorPricingController;
 use App\Http\Controllers\Promotor\PromotorCommunityController;
 use App\Http\Controllers\Promotor\RefundController as PromotorRefundController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Promotor\SponsorController as PromotorSponsorController
 use App\Http\Controllers\Promotor\TicketController as PromotorTicketController;
 use App\Http\Controllers\Promotor\VendorController as PromotorVendorController;
 use App\Http\Controllers\Promotor\VoucherController as PromotorVoucherController;
+use App\Http\Controllers\Promotor\WithdrawalController as PromotorWithdrawalController;
 use App\Http\Controllers\Public\BlogController as PublicBlogController;
 use App\Http\Controllers\Public\DistributionRedirectController;
 use App\Http\Controllers\Public\EventController as PublicEventController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\SuperAdmin\RefundController as SuperAdminRefundControll
 use App\Http\Controllers\SuperAdmin\ReportController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use App\Http\Controllers\SuperAdmin\TrustController;
+use App\Http\Controllers\SuperAdmin\WithdrawalController as SuperAdminWithdrawalController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\User\CrmController as UserCrmController;
 use App\Http\Controllers\User\DistributionLinkController;
@@ -109,6 +112,7 @@ Route::get('/communities/{community}', [PublicCommunityController::class, 'show'
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/communities/{community}/join', [PublicCommunityController::class, 'join']);
     Route::post('/communities/{community}/leave', [PublicCommunityController::class, 'leave']);
+    Route::get('/me/communities', [PublicCommunityController::class, 'mine']);
 });
 
 // ─── Public — Categories ─────────────────────────────────────────────────────
@@ -155,15 +159,15 @@ Route::middleware(['auth:sanctum', 'check.role:super_admin', 'check.tenant'])
         Route::put('/tenants/{tenant}/commission', [TenantController::class, 'updateCommission']);
 
         Route::get('/events/pending', [EventApprovalController::class, 'pendingEvents']);
-        Route::post('/events/{event}/approve', [EventApprovalController::class, 'approve']);
-        Route::post('/events/{event}/reject', [EventApprovalController::class, 'reject']);
-        Route::post('/events/{event}/toggle-featured', [EventApprovalController::class, 'toggleFeatured']);
+        Route::post('/events/{event:id}/approve', [EventApprovalController::class, 'approve']);
+        Route::post('/events/{event:id}/reject', [EventApprovalController::class, 'reject']);
+        Route::post('/events/{event:id}/toggle-featured', [EventApprovalController::class, 'toggleFeatured']);
         Route::get('/event-reschedules', [EventApprovalController::class, 'reschedules']);
         Route::post('/event-reschedules/{reschedule}/review', [EventApprovalController::class, 'reviewReschedule']);
         Route::get('/events', [OperationsController::class, 'events']);
         Route::get('/orders', [OperationsController::class, 'orders']);
 
-        Route::apiResource('/blogs', SuperAdminBlogController::class)->except(['create', 'edit']);
+        Route::apiResource('/blogs', SuperAdminBlogController::class)->except(['create', 'edit'])->names('super-admin.blogs');
         Route::post('/blogs/{blog}/toggle-publish', [SuperAdminBlogController::class, 'togglePublish']);
 
         Route::get('/reports/revenue', [ReportController::class, 'revenue']);
@@ -176,6 +180,12 @@ Route::middleware(['auth:sanctum', 'check.role:super_admin', 'check.tenant'])
         Route::get('/affiliates/rewards', [AffiliateController::class, 'rewards']);
         Route::get('/affiliates/links', [AffiliateController::class, 'links']);
         Route::get('/trust', [TrustController::class, 'index']);
+
+        Route::get('/withdrawals', [SuperAdminWithdrawalController::class, 'index']);
+        Route::post('/withdrawals/{withdrawal}/approve', [SuperAdminWithdrawalController::class, 'approve']);
+        Route::post('/withdrawals/{withdrawal}/reject', [SuperAdminWithdrawalController::class, 'reject']);
+        Route::post('/withdrawals/{withdrawal}/complete', [SuperAdminWithdrawalController::class, 'complete']);
+        Route::post('/withdrawals/{withdrawal}/fail', [SuperAdminWithdrawalController::class, 'fail']);
     });
 
 // ─── Promotor ────────────────────────────────────────────────────────────────
@@ -184,16 +194,16 @@ Route::middleware(['auth:sanctum', 'check.role:promotor', 'check.tenant'])
     ->group(function () {
         Route::get('/dashboard/stats', [PromotorDashboardController::class, 'stats']);
 
-        Route::get('/events/{event:id}/seat-map', [PromotorSeatMapController::class, 'show']);
-        Route::put('/events/{event:id}/seat-map', [PromotorSeatMapController::class, 'upsert']);
+        Route::get('/events/{event}/seat-map', [PromotorSeatMapController::class, 'show']);
+        Route::put('/events/{event}/seat-map', [PromotorSeatMapController::class, 'upsert']);
         Route::apiResource('/events', PromotorEventController::class)->except(['create', 'edit']);
         Route::post('/events/{event}/banner', [PromotorEventController::class, 'uploadBanner']);
         Route::post('/events/{event}/publish', [PromotorEventController::class, 'publish']);
-        Route::post('/events/{event:id}/reschedules', [PromotorEventController::class, 'requestReschedule']);
+        Route::post('/events/{event}/reschedules', [PromotorEventController::class, 'requestReschedule']);
 
         Route::apiResource('/events/{event}/tickets', PromotorTicketController::class)->except(['create', 'edit']);
 
-        Route::apiResource('/blogs', PromotorBlogController::class)->except(['create', 'edit']);
+        Route::apiResource('/blogs', PromotorBlogController::class)->except(['create', 'edit'])->names('promotor.blogs');
         Route::post('/blogs/{blog}/publish', [PromotorBlogController::class, 'publish']);
         Route::post('/blogs/{blog}/unpublish', [PromotorBlogController::class, 'unpublish']);
         Route::post('/blogs/{blog}/banner', [PromotorBlogController::class, 'uploadBanner']);
@@ -209,6 +219,9 @@ Route::middleware(['auth:sanctum', 'check.role:promotor', 'check.tenant'])
         Route::get('/reports', [PromotorReportController::class, 'index']);
         Route::get('/events/{event}/reports', [PromotorReportController::class, 'eventReport']);
         Route::get('/reports/export', [PromotorReportController::class, 'export']);
+
+        Route::get('/orders', [PromotorOrderController::class, 'index']);
+        Route::get('/events/{event:id}/orders', [PromotorOrderController::class, 'eventOrders']);
         Route::get('/crm/segments', [PromotorCrmController::class, 'segments']);
         Route::get('/crm/segments/{segment}', [PromotorCrmController::class, 'segmentMembers']);
         Route::get('/crm/similar/{event}', [PromotorCrmController::class, 'similar']);
@@ -220,6 +233,7 @@ Route::middleware(['auth:sanctum', 'check.role:promotor', 'check.tenant'])
         Route::delete('/crm/campaigns/{campaign}', [PromotorCrmController::class, 'campaignDestroy']);
 
         Route::apiResource('/communities', PromotorCommunityController::class)->except(['create', 'edit']);
+        Route::get('/communities/{community}/members', [PromotorCommunityController::class, 'members']);
         Route::post('/communities/{community}/members/{member}/role', [PromotorCommunityController::class, 'updateMemberRole']);
         Route::delete('/communities/{community}/members/{member}', [PromotorCommunityController::class, 'removeMember']);
         Route::get('/communities/{community}/events', [PromotorCommunityController::class, 'communityEvents']);
@@ -289,6 +303,11 @@ Route::middleware(['auth:sanctum', 'check.role:promotor', 'check.tenant'])
         Route::delete('/events/{event}/erp/checklists/{item}', [PromotorErpController::class, 'checklistDestroy']);
         Route::get('/refunds', [PromotorRefundController::class, 'index']);
         Route::post('/refunds/{refund}/review', [PromotorRefundController::class, 'review']);
+
+        Route::get('/withdraw/balance', [PromotorWithdrawalController::class, 'balance']);
+        Route::get('/withdraw/requests', [PromotorWithdrawalController::class, 'index']);
+        Route::post('/withdraw/requests', [PromotorWithdrawalController::class, 'store']);
+        Route::post('/withdraw/requests/{withdrawal}/cancel', [PromotorWithdrawalController::class, 'cancel']);
 
         Route::post('/events/{event:id}/scan', [PromotorScanController::class, 'scan'])->middleware('throttle:scan');
     });

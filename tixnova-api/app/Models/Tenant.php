@@ -48,6 +48,11 @@ class Tenant extends Model
         return $this->hasMany(LedgerEntry::class);
     }
 
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');

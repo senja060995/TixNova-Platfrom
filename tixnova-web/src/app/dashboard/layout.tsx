@@ -175,6 +175,7 @@ export default function DashboardLayout({
             { label: "Komisi Platform", href: "/dashboard/commission", icon: Percent },
             { label: "Affiliate & Distribusi", href: "/dashboard/affiliates", icon: Handshake },
             { label: "Trust Ledger", href: "/dashboard/trust", icon: ShieldCheck },
+            { label: "Withdrawal Promotor", href: "/dashboard/withdrawals", icon: Wallet },
           ],
         },
         {
@@ -195,6 +196,7 @@ export default function DashboardLayout({
             { label: "Pesanan Masuk", href: "/dashboard/orders", icon: ShoppingBag },
             { label: t("dashboard.reportsTitle"), href: "/dashboard/reports", icon: BarChart2 },
             { label: t("dashboard.scanTitle"), href: "/dashboard/scan", icon: QrCode },
+            { label: "Saldo & Tarik Dana", href: "/dashboard/withdraw", icon: Wallet },
           ],
         },
         {
@@ -231,6 +233,7 @@ export default function DashboardLayout({
           items: [
             { label: t("dashboard.refundsTitle"), href: "/dashboard/refunds", icon: RotateCcw },
             { label: t("dashboard.referralsTitle"), href: "/dashboard/referrals", icon: Gift },
+            { label: "Komunitas Saya", href: "/dashboard/my-communities", icon: Heart },
           ],
         },
       ];

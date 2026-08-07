@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
+import { ChevronLeft, Lock, Mail, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authApi } from "@/lib/api";
@@ -55,6 +55,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-bg-surface p-8 rounded-3xl border border-bg-border shadow-2xl relative overflow-hidden">
+        {/* Back to home */}
+        <Link
+          href="/"
+          className="absolute top-6 left-6 z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
+        </Link>
+
         {/* Language Switcher in header */}
         <div className="absolute top-6 right-6 z-10">
           <LanguageSwitcher />

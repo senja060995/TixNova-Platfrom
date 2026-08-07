@@ -1,0 +1,37 @@
+module.exports = {
+  apps: [
+    {
+      name: "tixnova-api",
+      cwd: "/var/www/TixNova-Platfrom/tixnova-api",
+      script: "artisan",
+      args: "serve --host=127.0.0.1 --port=8000",
+      interpreter: "/usr/bin/php8.4",
+      instances: 1,
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: 5000,
+    },
+    {
+      name: "tixnova-queue",
+      cwd: "/var/www/TixNova-Platfrom/tixnova-api",
+      script: "artisan",
+      args: "queue:work --queue=high,default,low --tries=3 --timeout=300 --sleep=1",
+      interpreter: "/usr/bin/php8.4",
+      instances: 1,
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: 5000,
+    },
+    {
+      name: "tixnova-scheduler",
+      cwd: "/var/www/TixNova-Platfrom/tixnova-api",
+      script: "artisan",
+      args: "schedule:work",
+      interpreter: "/usr/bin/php8.4",
+      instances: 1,
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: 5000,
+    },
+  ],
+};

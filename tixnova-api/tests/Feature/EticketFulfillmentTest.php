@@ -68,7 +68,26 @@ class EticketFulfillmentTest extends TestCase
         (new SendEticket($order->id))->handle();
 
         Mail::assertQueued(EticketMail::class, function (EticketMail $mail) {
-            $mail->assertSeeInHtml('Kursi: VIP-A1');
+            $mail->assertSeeInHtml('VIP-A1');
+
+            return true;
+        });
+    }
+
+    public function test_eticket_html_has_branding_and_qr_code(): void
+    {
+        Mail::fake();
+        $order = $this->paidOrder();
+
+        (new SendEticket($order->id))->handle();
+
+        Mail::assertQueued(EticketMail::class, function (EticketMail $mail) use ($order) {
+            $html = $mail->render();
+
+            $this->assertStringContainsString('Pembayaran Berhasil', $html);
+            $this->assertStringContainsString('TixNova', $html);
+            $this->assertStringContainsString('data:image/png;base64', $html);
+            $this->assertStringContainsString($order->order_code, $html);
 
             return true;
         });

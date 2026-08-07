@@ -25,7 +25,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $response = $this->actingAs($promotor, 'sanctum')->putJson(
-            "/api/promotor/events/{$event->id}/seat-map",
+            "/api/promotor/events/{$event->slug}/seat-map",
             [
                 'name' => 'Main Hall',
                 'is_published' => true,
@@ -76,7 +76,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -92,7 +92,7 @@ class SeatMapTest extends TestCase
         $seatMap->update(['locked_at' => now()]);
 
         $response = $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Updated',
                 'is_published' => true,
                 'sections' => [
@@ -118,7 +118,7 @@ class SeatMapTest extends TestCase
         Ticket::create(['event_id' => $otherEvent->id, 'name' => 'Other', 'price' => 50000, 'quota' => 10]);
 
         $response = $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -138,7 +138,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -160,7 +160,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => false,
                 'sections' => [
@@ -181,7 +181,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -222,7 +222,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -265,7 +265,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -301,7 +301,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -336,7 +336,7 @@ class SeatMapTest extends TestCase
         [$promotor, $event] = $this->promoterContext();
 
         $this->actingAs($promotor, 'sanctum')
-            ->putJson("/api/promotor/events/{$event->id}/seat-map", [
+            ->putJson("/api/promotor/events/{$event->slug}/seat-map", [
                 'name' => 'Main Hall',
                 'is_published' => true,
                 'sections' => [
@@ -393,7 +393,7 @@ class SeatMapTest extends TestCase
         Ticket::create(['event_id' => $event2->id, 'name' => 'Regular', 'price' => 100000, 'quota' => 10]);
 
         $response = $this->actingAs($promotor1, 'sanctum')
-            ->getJson("/api/promotor/events/{$event2->id}/seat-map");
+            ->getJson("/api/promotor/events/{$event2->slug}/seat-map");
         $response->assertNotFound();
     }
 

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Mail, Lock, Phone, Building, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { ChevronLeft, User, Mail, Lock, Phone, Building, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authApi } from "@/lib/api";
@@ -85,6 +85,14 @@ function RegisterContent() {
         <div className="absolute top-6 right-6 z-10">
           <LanguageSwitcher />
         </div>
+
+        {/* Back to home */}
+        <Link
+          href="/"
+          className="absolute top-6 left-6 z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
+        </Link>
 
         {/* Header */}
         <div className="text-center relative">

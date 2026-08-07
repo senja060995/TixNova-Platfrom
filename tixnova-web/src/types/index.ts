@@ -323,3 +323,46 @@ export interface TopTenant {
   orders_count: number;
   orders_sum_total: number;
 }
+
+export interface CommunityMember {
+  id: number;
+  user_id: number;
+  role: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+  joined_at: string;
+}
+
+export interface CommunityEventItem {
+  id: number;
+  community_id: number;
+  event_id: number;
+  revenue_share_pct: number;
+  event: {
+    id: number;
+    title: string;
+    slug: string;
+    start_date: string;
+    city: string;
+  } | null;
+}
+
+export interface Community {
+  id: number;
+  tenant_id: number;
+  name: string;
+  slug: string;
+  code: string;
+  type: string;
+  description?: string;
+  avatar?: string;
+  status: string;
+  is_member?: boolean;
+  members_count?: number;
+  members?: CommunityMember[];
+  events?: CommunityEventItem[];
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
+}

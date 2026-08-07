@@ -24,13 +24,36 @@ class PublicCommunityController extends Controller
         ]);
     }
 
-    public function show(Community $community): JsonResponse
+    public function show(Community $community, Request $request): JsonResponse
     {
         $community->load(['events.event:id,title,slug,start_date,city', 'members' => fn ($q) => $q->where('role', 'leader')]);
+
+        $user = $request->user() ?? auth('sanctum')->user();
+
+        if ($user) {
+            $community->is_member = CommunityMember::where('community_id', $community->id)
+                ->where('user_id', $user->id)
+                ->exists();
+        }
 
         return response()->json([
             'success' => true,
             'data' => $community,
+        ]);
+    }
+
+    public function mine(Request $request): JsonResponse
+    {
+        $communities = Community::withoutGlobalScopes()
+            ->where('status', 'active')
+            ->whereHas('members', fn ($q) => $q->where('user_id', $request->user()->id))
+            ->withCount('members')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $communities,
         ]);
     }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Menu, X, MapPin, LogOut, User, CreditCard,
-  Ticket, ChevronDown, BookOpen, Grid, LayoutDashboard
+  Ticket, ChevronDown, BookOpen, Grid, LayoutDashboard, Heart
 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
@@ -70,6 +70,9 @@ export function Navbar() {
             </Link>
             <Link href="/cities" className="text-text-secondary hover:text-primary transition-colors font-medium text-sm">
               {t("nav.cities")}
+            </Link>
+            <Link href="/communities" className="text-text-secondary hover:text-primary transition-colors font-medium text-sm">
+              Komunitas
             </Link>
             <Link href="/blogs" className="text-text-secondary hover:text-primary transition-colors font-medium text-sm">
               {t("nav.blog")}
@@ -195,6 +198,10 @@ export function Navbar() {
               <Link href="/cities" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-bg-elevated hover:text-white text-sm transition-colors">
                 <MapPin className="w-4 h-4 text-primary" />
                 <span>{t("nav.cities")}</span>
+              </Link>
+              <Link href="/communities" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-bg-elevated hover:text-white text-sm transition-colors">
+                <Heart className="w-4 h-4 text-primary" />
+                <span>Komunitas</span>
               </Link>
               <Link href="/blogs" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-bg-elevated hover:text-white text-sm transition-colors">
                 <BookOpen className="w-4 h-4 text-primary" />

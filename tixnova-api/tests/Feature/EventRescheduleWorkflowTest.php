@@ -26,7 +26,7 @@ class EventRescheduleWorkflowTest extends TestCase
         $newEnd = now()->addDays(30)->setTime(23, 0);
 
         $this->actingAs($promotor, 'sanctum')
-            ->postJson("/api/promotor/events/{$event->id}/reschedules", [
+            ->postJson("/api/promotor/events/{$event->slug}/reschedules", [
                 'new_start_date' => $newStart->toDateTimeString(),
                 'new_end_date' => $newEnd->toDateTimeString(),
                 'reason' => 'Penyesuaian jadwal venue untuk kenyamanan seluruh penonton.',
@@ -56,7 +56,7 @@ class EventRescheduleWorkflowTest extends TestCase
         $originalStart = $event->start_date->toDateTimeString();
 
         $this->actingAs($promotor, 'sanctum')
-            ->postJson("/api/promotor/events/{$event->id}/reschedules", [
+            ->postJson("/api/promotor/events/{$event->slug}/reschedules", [
                 'new_start_date' => now()->addDays(30)->toDateTimeString(),
                 'new_end_date' => now()->addDays(30)->addHours(3)->toDateTimeString(),
                 'reason' => 'Perubahan jadwal karena agenda venue yang tidak dapat dihindari.',
