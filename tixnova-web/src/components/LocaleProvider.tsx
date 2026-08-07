@@ -22,6 +22,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     "nav.history": "Riwayat Transaksi",
     "nav.logout": "Keluar",
     "nav.navigation": "Navigasi TixNova",
+    "nav.account": "Akun",
 
     // Footer
     "footer.description": "Platform ticketing konser modern Indonesia. Temukan, beli, dan nikmati konser favoritmu dengan mudah, aman, dan cepat.",
@@ -190,6 +191,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     "nav.history": "Transaction History",
     "nav.logout": "Log out",
     "nav.navigation": "TixNova Navigation",
+    "nav.account": "Account",
 
     // Footer
     "footer.description": "Indonesia's modern concert ticketing platform. Discover, buy, and enjoy your favorite concerts easily, safely, and quickly.",

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   Menu, X, MapPin, LogOut, User, CreditCard,
-  Ticket, ChevronDown, BookOpen, Grid, LayoutDashboard, Heart
+  Ticket, ChevronDown, BookOpen, Grid, LayoutDashboard, Heart, LogIn, UserPlus, Megaphone
 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
@@ -13,16 +13,17 @@ import { useLocale } from "@/components/LocaleProvider";
 
 export function Navbar() {
   const { t } = useLocale();
-  const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   const { user, isAuthenticated, logout } = useAuthStore();
   const isUserAuthenticated = mounted && isAuthenticated;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -83,7 +84,7 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             {isUserAuthenticated ? (
-              <>
+              <div className="hidden sm:flex items-center gap-3">
                 {/* Dedicated Ticket Icon Button for Logged-In User */}
                 <Link
                   href="/dashboard/my-tickets"
@@ -146,10 +147,10 @@ export function Navbar() {
                     </div>
                   )}
                 </div>
-              </>
+              </div>
             ) : (
               /* Guest Auth Buttons */
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <Link href="/promotor" className="hidden sm:inline-flex btn-outline text-xs font-bold py-2 px-3">
                   {t("nav.promoter")}
                 </Link>
@@ -233,14 +234,18 @@ export function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Link href="/promotor" onClick={() => setIsMobileMenuOpen(false)} className="btn-outline w-full justify-center text-xs py-2.5">
+                <div className="space-y-2.5">
+                  <p className="px-1 text-[11px] font-bold uppercase tracking-wider text-text-muted">{t("nav.account")}</p>
+                  <Link href="/promotor" onClick={() => setIsMobileMenuOpen(false)} className="btn-outline w-full justify-center text-xs py-2.5 inline-flex items-center gap-2">
+                    <Megaphone className="w-4 h-4" />
                     {t("nav.promoter")}
                   </Link>
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="btn-secondary w-full justify-center text-xs py-2.5">
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="btn-secondary w-full justify-center text-xs py-2.5 inline-flex items-center gap-2">
+                    <LogIn className="w-4 h-4" />
                     {t("nav.login")}
                   </Link>
-                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary w-full justify-center text-xs py-2.5">
+                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary w-full justify-center text-xs py-2.5 inline-flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" />
                     {t("nav.register")}
                   </Link>
                 </div>

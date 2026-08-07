@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, User, Mail, Lock, Phone, Building, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { ChevronLeft, User, Mail, Lock, Phone, Building, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authApi } from "@/lib/api";
@@ -80,19 +79,17 @@ function RegisterContent() {
 
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-lg w-full space-y-8 bg-bg-surface p-8 rounded-3xl border border-bg-border shadow-2xl relative overflow-hidden">
-        {/* Language Switcher */}
-        <div className="absolute top-6 right-6 z-10">
+      <div className="max-w-lg w-full space-y-8 bg-bg-surface p-6 sm:p-8 rounded-3xl border border-bg-border shadow-2xl relative overflow-hidden">
+        {/* Back to home + language switcher */}
+        <div className="relative z-10 flex items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
+          </Link>
           <LanguageSwitcher />
         </div>
-
-        {/* Back to home */}
-        <Link
-          href="/"
-          className="absolute top-6 left-6 z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
-        </Link>
 
         {/* Header */}
         <div className="text-center relative">
