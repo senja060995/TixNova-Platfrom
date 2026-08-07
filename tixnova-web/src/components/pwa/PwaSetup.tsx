@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Smartphone, Download, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -8,16 +9,25 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const BANNER_BLOCKED_PREFIXES = ["/login", "/register", "/forgot-password", "/reset-password", "/embed"];
+
 export function PwaSetup() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [installing, setInstalling] = useState(false);
 
+  const bannerAllowed = !BANNER_BLOCKED_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
+
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => {});
+    }
+
+    if (!bannerAllowed) {
+      return;
     }
 
     const onBeforeInstall = (e: Event) => {
@@ -46,7 +56,7 @@ export function PwaSetup() {
       window.removeEventListener("appinstalled", onAppInstalled);
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [bannerAllowed]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
@@ -60,7 +70,7 @@ export function PwaSetup() {
     setInstalling(false);
   };
 
-  if (isStandalone || !showPrompt) {
+  if (isStandalone || !showPrompt || !bannerAllowed) {
     return null;
   }
 

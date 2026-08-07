@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TicketQrCode } from "@/components/tickets/TicketQrCode";
+import { AppBottomNav } from "@/components/wallet/AppBottomNav";
 import {
   Wallet as WalletIcon,
-  Home,
-  History,
-  User,
   Calendar,
   MapPin,
   QrCode,
@@ -38,13 +36,6 @@ interface UserTicket {
     };
   };
 }
-
-const NAV = [
-  { label: "Beranda", href: "/", icon: Home },
-  { label: "Dompet", href: "/wallet", icon: WalletIcon, active: true },
-  { label: "Riwayat", href: "/dashboard/history", icon: History },
-  { label: "Profil", href: "/dashboard/profile", icon: User },
-];
 
 export default function WalletPage() {
   const router = useRouter();
@@ -183,26 +174,7 @@ export default function WalletPage() {
       </main>
 
       {/* Bottom nav (app-lite) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md">
-        <div className="m-2 flex items-center justify-around rounded-2xl border border-bg-border bg-bg-surface/95 px-2 py-2 backdrop-blur">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = item.active;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-col items-center gap-0.5 rounded-xl px-4 py-1.5 text-[10px] font-semibold ${
-                  active ? "text-primary" : "text-text-muted"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <AppBottomNav />
 
       {/* Fullscreen QR modal */}
       {selectedTicket && (

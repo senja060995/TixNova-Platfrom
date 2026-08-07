@@ -1,4 +1,4 @@
-const CACHE_NAME = "tixnova-shell-v1";
+const CACHE_NAME = "tixnova-shell-v2";
 const SHELL_ASSETS = [
   "/",
   "/wallet",
@@ -37,7 +37,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Never cache API calls or non-GET requests.
+  // Never cache API calls.
   if (url.pathname.startsWith("/api")) {
     return;
   }
@@ -47,10 +47,10 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match("/"))
+        .catch(async () => (await caches.match(request)) || (await caches.match("/")))
     );
     return;
   }
@@ -68,48 +68,7 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => caches.match("/wallet"));
-    })
-  );
-});
-
-self.addEventListener("push", (event) => {
-  if (!event.data) {
-    return;
-  }
-
-  let payload = {};
-  try {
-    payload = event.data.json();
-  } catch {
-    payload = { title: "TixNova", body: event.data.text() };
-  }
-
-  const options = {
-    body: payload.body || "Ada pembaruan dari TixNova.",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    vibrate: [100, 50, 100],
-    data: {
-      url: payload.url || "/wallet",
-      dateOfArrival: Date.now(),
-    },
-  };
-
-  event.waitUntil(self.registration.showNotification(payload.title || "TixNova", options));
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = event.notification.data?.url || "/wallet";
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (new URL(client.url).pathname === new URL(url, self.location.origin).pathname) {
-          return client.focus();
-        }
-      }
-      return clients.openWindow(url);
+        .catch(() => caches.match("/"));
     })
   );
 });
