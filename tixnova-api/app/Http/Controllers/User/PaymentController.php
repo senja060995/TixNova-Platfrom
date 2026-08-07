@@ -81,7 +81,7 @@ class PaymentController extends Controller
             };
 
             $payment->update([
-                'payment_url' => $response['redirect_url'] ?? ($response['invoice_url'] ?? null),
+                'payment_url' => $response['redirect_url'] ?? ($response['invoice_url'] ?? ($response['url'] ?? null)),
                 'payload_raw' => $this->safePayload($response),
             ]);
 
