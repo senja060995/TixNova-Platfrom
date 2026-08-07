@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasTenant;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -33,6 +35,40 @@ class Event extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
     ];
+
+    // ─── Media Helpers ────────────────────────────────────────
+
+    public function bannerUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->resolveMediaUrl($this->banner));
+    }
+
+    public function posterUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->resolveMediaUrl($this->poster));
+    }
+
+    public function coverUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->resolveMediaUrl($this->banner)
+                ?? $this->resolveMediaUrl($this->poster)
+                ?? 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1200';
+        });
+    }
+
+    protected function resolveMediaUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://', 'data:', 'cid:'])) {
+            return $path;
+        }
+
+        return asset('storage/'.ltrim($path, '/'));
+    }
 
     // ─── Relations ────────────────────────────────────────────
 
