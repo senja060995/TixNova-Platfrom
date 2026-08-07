@@ -84,9 +84,11 @@ function RegisterContent() {
         <div className="relative z-10 flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-secondary hover:text-primary transition-colors"
+            aria-label="Kembali ke Beranda"
+            title="Kembali ke Beranda"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-bg-border bg-bg-surface text-text-secondary hover:text-primary hover:border-primary/50 transition-all"
           >
-            <ChevronLeft className="w-4 h-4" /> Kembali ke Beranda
+            <ChevronLeft className="w-5 h-5" />
           </Link>
           <LanguageSwitcher />
         </div>
