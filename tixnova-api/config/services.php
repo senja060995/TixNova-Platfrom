@@ -70,6 +70,7 @@ return [
         'is_production' => env('STRIPE_IS_PRODUCTION', false),
         'base_url' => 'https://api.stripe.com',
         'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+        'payment_method_types' => array_values(array_filter(array_map('trim', explode(',', env('STRIPE_PAYMENT_METHODS', 'card,link'))))),
     ],
 
 ];
